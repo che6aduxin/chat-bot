@@ -25,7 +25,11 @@ def webhook():
         data = request.get_json()
         print("\n🟡 Webhook сработал!")
         print("🔍 JSON:", data)
-
+        
+        if data.get("typeWebhook") != "incomingMessageReceived":
+            print("🔃 Это не входящее сообщение, пропускаем.")
+            return "Ignored", 200
+        
         message = data['messageData']['textMessageData']['textMessage']
         phone = data['senderData']['chatId'].replace("@c.us", "")
 
