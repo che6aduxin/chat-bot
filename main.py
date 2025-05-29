@@ -32,7 +32,8 @@ def ask_chatgpt(user_message):
                 {"role": "user", "content": user_message}
             ]
         )
-        return response.choices[0].message["content"].strip()
+#        return response.choices[0].message["content"].strip()
+        return response.output_text
     except Exception as e:
         print("❌ Ошибка при запросе к ChatGPT:", e)
         return "Извините, в Москве большие проблемы со связью, смогу вас проконсультировать чуть позже. Не могу открыть наше расписание"
