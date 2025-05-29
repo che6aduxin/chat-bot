@@ -27,10 +27,11 @@ def ask_chatgpt(user_message):
     try:
         response = openai.completions.create(
             model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "Ты вежливый и дружелюбный администратор салона красоты. Помогаешь записаться, уточняешь детали, отвечаешь естественно."},
-                {"role": "user", "content": user_message}
-            ]
+            input=user_message
+#            messages=[
+#                {"role": "system", "content": "Ты вежливый и дружелюбный администратор салона красоты. Помогаешь записаться, уточняешь детали, отвечаешь естественно."},
+#                {"role": "user", "content": user_message}
+#            ]
         )
         return response.choices[0].message["content"].strip()
     except Exception as e:
