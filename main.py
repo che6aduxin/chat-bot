@@ -25,7 +25,7 @@ def send_message(phone, text):
 # 🤖 Получение ответа от ChatGPT
 def ask_chatgpt(user_message):
     try:
-        response = openai.ChatCompletion.create(
+        response = openai.completions.create(
             model="gpt-4o",
             messages=[
                 {"role": "system", "content": "Ты вежливый и дружелюбный администратор салона красоты. Помогаешь записаться, уточняешь детали, отвечаешь естественно."},
