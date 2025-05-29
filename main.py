@@ -32,10 +32,6 @@ def ask_chatgpt(user_message):
                 {"role": "user", "content": user_message}
             ]
         )
-#            messages=[
-#                {"role": "system", "content": "Ты вежливый и дружелюбный администратор салона красоты. Помогаешь записаться, уточняешь детали, отвечаешь естественно."},
-#                {"role": "user", "content": user_message}
-#            ]
         return response.choices[0].message["content"].strip()
     except Exception as e:
         print("❌ Ошибка при запросе к ChatGPT:", e)
@@ -59,13 +55,6 @@ def webhook():
         reply = ask_chatgpt(message)
         send_message(phone, reply)
 
-        # 🤖 Простейшая логика ответа
-#        if "привет" in message.lower():
-#            send_message(phone, "Здравствуйте! Чем могу помочь?")
-#        elif "записаться" in message.lower():
-#            send_message(phone, "Укажите услугу и удобное время, пожалуйста.")
-#        else:
-#            send_message(phone, "Извините, я вас не понял. Напишите 'записаться' или 'привет'.")
     except Exception as e:
         print("❌ Ошибка в webhook:", e)
     return "OK", 200
