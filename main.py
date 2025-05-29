@@ -25,7 +25,7 @@ def send_message(phone, text):
 # 🤖 Получение ответа от ChatGPT
 def ask_chatgpt(user_message):
     try:
-        response = openai.completions.create(
+        response = openai.responses.create(
             model="gpt-4o",
             input=user_message
 #            messages=[
