@@ -8,7 +8,7 @@ app = Flask(__name__)
 # 📦 Переменные окружения (устанавливаются в Railway)
 GREEN_API_ID = os.getenv("GREEN_API_ID")
 GREEN_API_TOKEN = os.getenv("GREEN_API_TOKEN")
-OPENAI_API_TOKEN = os.getenv("CHATGPT_OPENAI_TOKEN")
+OPENAI_API_TOKEN = os.getenv("OPENAI_API_TOKEN")
 
 openai.api_key = OPENAI_API_TOKEN
 
