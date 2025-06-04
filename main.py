@@ -2,7 +2,7 @@ from flask import Flask, request
 import requests
 import os
 import openai
-import yclients-api
+import yclients
 from yclients import YClientsAPI
 
 app = Flask(__name__)
