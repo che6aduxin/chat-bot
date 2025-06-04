@@ -3,3 +3,4 @@ requests
 openai
 yclients-api
 pandas
+ujson
