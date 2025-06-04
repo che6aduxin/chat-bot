@@ -17,9 +17,7 @@ def find_book_request_in_message(user_message):
         prompt = str("Если в данном сообщении есть желаение записаться на какую-то услугу, напиши, какую услугу хочет клиент, от какого мастера, когда и во сколько, в формате строки \" Услуга; Мастер; Дата; Время \", а если в данном сообщении отсутствуют какие то из этих параметров, то вставляй \"NA\" в строку на месте отсутствуюзего параметра" + user_message)
         response = openai.responses.create(
             model="gpt-4o",
-            input=[
-                {prompt}
-            ]    
+            input=prompt    
         )
         return response.output_text
      except Exception as e:
