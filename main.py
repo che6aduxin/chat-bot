@@ -12,6 +12,20 @@ OPENAI_API_TOKEN = os.getenv("OPENAI_API_TOKEN")
 
 openai.api_key = OPENAI_API_TOKEN
 
+def find_book_request_in_message(user_message):
+     try:
+        prompt = "Если в данном сообщении есть желаение записаться на какую-то услугу, напиши, какую услугу хочет клиент, от какого мастера, когда и во сколько, в формате строки \" Услуга; Мастер; Дата; Время \", а если в данном сообщении отсутствуют какие то из этих параметров, то вставляй \"NA\" в строку на месте отсутствуюзего параметра" + user_message
+        response = openai.responses.create(
+            model="gpt-4o",
+            input=[
+                {prompt}
+            ]    
+        )
+        return response.output_text
+    except Exception as e:
+        print("❌ Ошибка при запросе к ChatGPT:", e)
+        return none
+
 # 📤 Отправка сообщения
 def send_message(phone, text):
     url = f"https://api.green-api.com/waInstance{GREEN_API_ID}/sendMessage/{GREEN_API_TOKEN}"
@@ -52,6 +66,8 @@ def webhook():
         
         message = data['messageData']['textMessageData']['textMessage']
         phone = data['senderData']['chatId'].replace("@c.us", "")
+
+        print(find_book_request_in_message(message))
 
         reply = ask_chatgpt(message)
         send_message(phone, reply)
