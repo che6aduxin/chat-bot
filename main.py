@@ -24,7 +24,7 @@ def find_book_request_in_message(user_message):
         return response.output_text
     except Exception as e:
         print("❌ Ошибка при запросе к ChatGPT:", e)
-        return none
+        return "error"
 
 # 📤 Отправка сообщения
 def send_message(phone, text):
