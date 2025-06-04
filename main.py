@@ -2,6 +2,8 @@ from flask import Flask, request
 import requests
 import os
 import openai
+import yclients-api
+from yclients import YClientsAPI
 
 app = Flask(__name__)
 
@@ -11,6 +13,27 @@ GREEN_API_TOKEN = os.getenv("GREEN_API_TOKEN")
 OPENAI_API_TOKEN = os.getenv("OPENAI_API_TOKEN")
 
 openai.api_key = OPENAI_API_TOKEN
+
+
+def get_booking_dates():
+     return None
+
+
+def get_booking_times():
+     return None
+
+
+def book():
+     return None
+
+
+def get_staff_info():
+     return None
+
+
+def get_services_info():
+     return None
+
 
 def find_book_request_in_message(user_message):
      try:
