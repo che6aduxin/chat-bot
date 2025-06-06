@@ -22,7 +22,7 @@ def get_booking_dates(staff_id, service_id):
      return day
 
 
-def get_booking_times(staff_id, staff_id, service_id, day):
+def get_booking_times(staff_id, service_id, day):
      time_slots = api.get_available_times(staff_id=staff_id, service_id=service_id, day=day)
      print(time_slots)
      date_time = time_slots['data'].get('time')
