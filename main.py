@@ -15,39 +15,39 @@ OPENAI_API_TOKEN = os.getenv("OPENAI_API_TOKEN")
 openai.api_key = OPENAI_API_TOKEN
 
 
-def get_booking_dates(data):
+def get_booking_dates(staff_id, service_id):
      booking_days = api.get_available_days(staff_id=staff_id, service_id=service_id)
      print(booking_days)
      day = booking_days['data'].get('booking_dates')
      return day
 
 
-def get_booking_times():
+def get_booking_times(staff_id, staff_id, service_id, day):
      time_slots = api.get_available_times(staff_id=staff_id, service_id=service_id, day=day)
      print(time_slots)
      date_time = time_slots['data'].get('time')
      return date_time
 
 
-def book():
+def book(name, phone, email, service_id, date_time, staff_id, comment):
      booked, message = api.book(booking_id=0, 
-     fullname='my name', 
-     phone='53425345', 
-     email='myemail@email.com, 
+     fullname=name, 
+     phone=phone, 
+     email=email, 
      service_id=service_id, 
      date_time=date_time, 
      staff_id=staff_id, 
-     comment='some comment')
+     comment=comment)
      return "Booked"
 
-def get_staff_info(data):
+def get_staff_info():
      all_staff = api.get_staff()
      print(all_staff)
      staff_id = all_staff['data'].get('id')
      return staff_id
 
 
-def get_services_info(data, staff_id):
+def get_services_info(staff_id):
      services = api.get_services(staff_id=staff_id)
      print(services)
      service_id = services['data']['services'].get('id')
