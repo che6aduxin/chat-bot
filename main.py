@@ -18,7 +18,7 @@ YCLIENTS_FORM_ID = ""
 
 openai.api_key = OPENAI_API_TOKEN
 
-api = YClientsAPI(token=YCLIENTS_API_TOKEN, company_id=YCLIENTS_COMPANY_ID, form_id=YCLIENTS_FORM_ID, debug=True)
+api = YClientsAPI(token=YCLIENTS_API_TOKEN, company_id=YCLIENTS_COMPANY_ID, form_id=YCLIENTS_FORM_ID, debug=TRUE)
 
 
 def get_booking_dates(staff_id, service_id):
