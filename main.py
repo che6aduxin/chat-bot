@@ -230,6 +230,35 @@ tools = [
             },
             "required": ["staff_id", "service_id"]
         }  
+    },
+    {
+        "type": "function",
+        "name": "get_available_dates_for_service",
+        "description": (
+            "Возвращет список дат на которые доступна запись для заданной услуги в формате ГГГГ-ММ-ДД "
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "service_id": {"type": "string", "description": "id услуги"}
+            },
+            "required": ["service_id"]
+        }
+    },
+    {
+        "type": "function",
+        "name": "get_staff_for_date_service",
+        "description": (
+            "Возвращает список с id перслонала, доступного в заданную дату и на заданную услугу"
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "service_id": {"type": "string", "description": "id услуги"},
+                "date": {"type": "string", "description": "дата в формате ГГГГ-ММ-ДД"}
+            },
+            "required": ["service_id", "date"]
+        }
     }
 ]
 
