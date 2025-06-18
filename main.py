@@ -161,7 +161,8 @@ functions = [
                 "time": {"type": "string", "description": "Время в формате ЧЧ:ММ"}
             },
             "required": ["service", "master", "date", "time"]
-     },
+        }
+    },
     {
         "name": "get_all_staff_list",
         "description": (
