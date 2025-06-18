@@ -22,24 +22,39 @@ api = YClientsAPI(
 )
 
 def get_all_staff_list():
-    all_staff = api.get_staff()
-    staff_dict = {}
-    for elem in all_staff['data']:
-        staff_name = elem.get('name')
-        staff_id = elem.get('id')
-        staff_dict[staff_name] = staff_id
-    return staff_dict
+    try:
+        staff_response = api.get_staff()
+        print("YClients staff_response:", staff_response)
+        staff_dict = {}
+        for elem in staff_response.get('data', []):
+            staff_name = elem.get('name')
+            staff_id = elem.get('id')
+            staff_dict[staff_name] = staff_id
+        print("staff_dict:", staff_dict)
+        return staff_dict
+    except Exception as e:
+        print("Ошибка при получении списка мастеров:", e)
+        return None
 
 def get_all_services_list():
-    services = api.get_services()
-    services_dict = {}
-    for elem in services['data']['services']:
-        service_title = elem.get('title')
-        service_id = elem.get('id')
-        services_dict[service_title] = service_id
-    return services_dict
+    try:
+        services_response = api.get_services()
+        print("YClients services_response:", services_response)
+        services_dict = {}
+        for elem in services_response.get('data', {}).get('services', []):
+            service_title = elem.get('title')
+            service_id = elem.get('id')
+            services_dict[service_title] = service_id
+        print("services_dict:", services_dict)
+        return services_dict
+    except Exception as e:
+        print("Ошибка при получении списка услуг:", e)
+        return None
 
 def find_service_id(user_input, services_dict):
+    if services_dict is None:
+        print("find_service_id: services_dict is None")
+        return None
     if user_input in services_dict:
         return services_dict[user_input]
     for name, id_ in services_dict.items():
@@ -48,17 +63,22 @@ def find_service_id(user_input, services_dict):
     return None
 
 def book(name, phone, email, service_id, date_time, staff_id, comment):
-    res = api.book(
-        booking_id=0,
-        fullname=name,
-        phone=phone,
-        email=email,
-        service_id=service_id,
-        date_time=date_time,
-        staff_id=staff_id,
-        comment=comment
-    )
-    return res
+    try:
+        res = api.book(
+            booking_id=0,
+            fullname=name,
+            phone=phone,
+            email=email,
+            service_id=service_id,
+            date_time=date_time,
+            staff_id=staff_id,
+            comment=comment
+        )
+        print("Результат бронирования:", res)
+        return res
+    except Exception as e:
+        print("Ошибка при бронировании:", e)
+        return None
 
 def send_message(phone, text):
     url = f"https://api.green-api.com/waInstance{GREEN_API_ID}/sendMessage/{GREEN_API_TOKEN}"
@@ -114,10 +134,8 @@ def webhook():
 
         phone = data['senderData']['chatId'].replace("@c.us", "")
 
-        # ----- LOG: Входящее сообщение -----
         print(f"Входящее сообщение: '{message}' от {phone}")
 
-        # --- ВАЖНО! SYSTEM PROMPT очень строгий:
         system_prompt = (
             "Ты виртуальный ассистент салона красоты. "
             "ЕСЛИ в сообщении пользователя есть все параметры (услуга, мастер, дата, время), "
@@ -143,19 +161,27 @@ def webhook():
         choice = response.choices[0].message
         print("\n--- ПОЛНЫЙ ОТВЕТ OpenAI ---\n", choice, "\n---------------------------\n")
 
-        # Если GPT вызвал функцию booking
         if getattr(choice, "function_call", None):
             args = json.loads(choice.function_call.arguments)
             print("Function call args:", args)
 
-            # Проверяем есть ли такие услуга и мастер в базе
             all_services = get_all_services_list()
             all_staff = get_all_staff_list()
-            service_id = find_service_id(args['service'], all_services)
-            staff_id = all_staff.get(args['master'])
-            date_time = f"{args['date']} {args['time']}"
+            print("all_services:", all_services)
+            print("all_staff:", all_staff)
+            print("args:", args)
 
-            # Диагностика: что не нашлось?
+            if all_services is None or all_staff is None:
+                print("❌ Не удалось получить список услуг или мастеров!")
+                send_message(phone, "Ошибка: не удалось получить список услуг или мастеров (None).")
+                return "OK", 200
+
+            service_id = find_service_id(args['service'], all_services)
+            staff_id = all_staff.get(args['master']) if all_staff else None
+            date_time = f"{args['date']} {args['time']}"
+            print("service_id:", service_id)
+            print("staff_id:", staff_id)
+
             if not service_id:
                 err_msg = f"❗️Услуга '{args['service']}' не найдена. Есть: {', '.join(all_services.keys())}"
                 print(err_msg)
@@ -167,17 +193,16 @@ def webhook():
                 send_message(phone, err_msg)
                 return "OK", 200
 
-            try:
-                book(args['master'], phone, "noemail@email.com", service_id, date_time, staff_id, "auto-book")
+            booking_result = book(args['master'], phone, "noemail@email.com", service_id, date_time, staff_id, "auto-book")
+            if booking_result is not None:
                 ok_msg = f"Вы успешно записаны на {args['service']} к мастеру {args['master']} {args['date']} в {args['time']}! Ждём вас в салоне."
                 print(ok_msg)
                 send_message(phone, ok_msg)
-            except Exception as e:
-                print("Ошибка при бронировании:", e)
-                send_message(phone, f"Произошла ошибка при записи: {e}")
+            else:
+                print("❌ Ошибка при бронировании!")
+                send_message(phone, "Не удалось завершить бронирование.")
             return "OK", 200
 
-        # Если GPT не смог вызвать функцию (или не попытался)
         else:
             print("⚠️ GPT не вызвал функцию! Полный ответ:", choice)
             if choice.content:
