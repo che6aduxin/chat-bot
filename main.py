@@ -161,6 +161,16 @@ functions = [
                 "time": {"type": "string", "description": "Время в формате ЧЧ:ММ"}
             },
             "required": ["service", "master", "date", "time"]
+        },
+    {
+        "name": "get_all_staff_list",
+        "description": (
+            "Возвращает словарь со всем персоналом, где ключами являются имена сотрудников, а значаниями являются их id"
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": [] 
         }
     }
 ]
