@@ -178,6 +178,18 @@ tools = [
     },
     {
         "type": "function",
+        "name": "get_all_staff_list_inv",
+        "description": (
+            "Возвращает словарь со всем персоналом, где ключами являются id сотрудников, а значаниями являются их имена"
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": [] 
+        }
+    },
+    {
+        "type": "function",
         "name": "get_all_services_list",
         "description": (
             "Возвращает словарь со всеми услугами, где ключами являются названия услуг, а значаниями являются их id"
@@ -186,6 +198,18 @@ tools = [
             "type": "object",
             "properties": {},
             "required": [] 
+        }
+    },
+    {
+        "type": "function",
+        "name": "get_all_services_list_inv",
+        "description": (
+            "Возвращает словарь со всеми услугами, где ключами являются id услуг, а значаниями являются их названия"
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": []
         }
     },
     {
