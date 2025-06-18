@@ -6,27 +6,22 @@ from yclients import YClientsAPI
 
 app = Flask(__name__)
 
-# Переменные окружения
 GREEN_API_ID = os.getenv("GREEN_API_ID")
 GREEN_API_TOKEN = os.getenv("GREEN_API_TOKEN")
 OPENAI_API_TOKEN = os.getenv("OPENAI_API_TOKEN")
 YCLIENTS_API_TOKEN = os.getenv("YCLIENTS_API_TOKEN")
 YCLIENTS_COMPANY_ID = os.getenv("YCLIENTS_COMPANY_ID")
 
-# Новый клиент OpenAI (v1.x и выше)
 client = openai.OpenAI(api_key=OPENAI_API_TOKEN)
 
-# YClients API — обязательно form_id (любая строка, напр. "1")
 api = YClientsAPI(
     token=YCLIENTS_API_TOKEN,
     company_id=YCLIENTS_COMPANY_ID,
     form_id="1"
 )
 
-# Простая "память" на пользователя (для прототипа)
 user_context = {}
 
-# ------- YCLIENTS ФУНКЦИИ -------
 def get_all_staff_list():
     all_staff = api.get_staff()
     staff_dict = {}
@@ -46,10 +41,8 @@ def get_all_services_list():
     return services_dict
 
 def find_service_id(user_input, services_dict):
-    # Сначала ищем полное совпадение:
     if user_input in services_dict:
         return services_dict[user_input]
-    # Потом ищем по вхождению (регистр игнорируем)
     for name, id_ in services_dict.items():
         if user_input and user_input.lower() in name.lower():
             return id_
@@ -68,7 +61,6 @@ def book(name, phone, email, service_id, date_time, staff_id, comment):
     )
     return res
 
-# ------- NLP/AI функции -------
 def find_booking_intent(ctx, user_message):
     prompt = (
         f"Ты администратор салона красоты. Клиент уже сообщил: {ctx}. "
@@ -110,9 +102,8 @@ def send_message(phone, text):
     print(f"Green API ответ: {response.status_code} - {response.text}")
 
 def update_context_from_message(ctx, message):
-    """Обновляем контекст из текста сообщения клиента через ChatGPT"""
     intent = find_booking_intent(ctx, message)
-    print("Booking intent:", intent)  # ЛОГИРОВАНИЕ!
+    print("Booking intent:", intent)
     if intent and "показать_услуги" in intent:
         ctx["show_services"] = True
         return
@@ -127,7 +118,6 @@ def update_context_from_message(ctx, message):
     except Exception as e:
         print("Парсинг намерения не удался:", e)
 
-# ------- Webhook -------
 @app.route("/webhook", methods=["POST"])
 def webhook():
     try:
@@ -152,51 +142,56 @@ def webhook():
 
         # Контекст пользователя
         if phone not in user_context:
-            user_context[phone] = {"услуга": None, "мастер": None, "дата": None, "время": None}
+            user_context[phone] = {"услуга": None, "мастер": None, "дата": None, "время": None, "pending_confirmation": False}
         ctx = user_context[phone]
 
         # Обновляем контекст по текущему сообщению
         ctx["show_services"] = False
         update_context_from_message(ctx, message)
 
+        # Если пользователь ждёт подтверждение (pending_confirmation=True)
+        if ctx.get("pending_confirmation"):
+            if message.strip().lower() in ["да", "да, всё верно", "всё верно", "подтверждаю", "ок", "yes"]:
+                all_services = get_all_services_list()
+                service_id = find_service_id(ctx["услуга"], all_services)
+                all_staff = get_all_staff_list()
+                staff_id = all_staff.get(ctx["мастер"])
+                date_time = f"{ctx['дата']} {ctx['время']}"
+                if not service_id:
+                    send_message(phone, f"Не могу найти услугу '{ctx['услуга']}'. Вот список доступных: {', '.join(all_services.keys())}")
+                elif not staff_id:
+                    send_message(phone, f"Не могу найти мастера '{ctx['мастер']}'. Вот кто доступен: {', '.join(all_staff.keys())}")
+                else:
+                    try:
+                        book(ctx["мастер"], phone, "noemail@email.com", service_id, date_time, staff_id, "auto-book")
+                        send_message(phone, "Вы успешно записаны! Ждём вас в нашем салоне.")
+                    except Exception as e:
+                        send_message(phone, f"Произошла ошибка при записи: {e}")
+                # Сброс контекста
+                user_context[phone] = {"услуга": None, "мастер": None, "дата": None, "время": None, "pending_confirmation": False}
+            else:
+                send_message(phone, "Запись не подтверждена. Если хотите записаться, напишите 'да'.")
+            return "OK", 200
+
         # Если человек спросил про услуги — показать список и выйти из функции
         if ctx.get("show_services"):
             all_services = get_all_services_list()
             send_message(phone, "Вот наши услуги: " + ", ".join(all_services.keys()))
-            ctx["show_services"] = False  # сбрасываем флаг
+            ctx["show_services"] = False
             return "OK", 200
 
         # Проверяем, чего не хватает
-        missing = [k for k, v in ctx.items() if not v and k != "show_services"]
+        missing = [k for k, v in ctx.items() if not v and k not in ["show_services", "pending_confirmation"]]
         if missing:
-            # Запрашиваем только следующее недостающее поле (шаг за шагом)
             next_field = missing[0]
             reply = ask_for_next_field(ctx, next_field)
             send_message(phone, reply)
             return "OK", 200
         else:
-            # Все поля заполнены — подтверждаем и бронируем
-            reply = f"Вы хотите {ctx['услуга']} у {ctx['мастер']} {ctx['дата']} в {ctx['время']} — всё верно?"
+            # Все поля заполнены — просим подтверждение!
+            reply = f"Вы хотите {ctx['услуга']} у {ctx['мастер']} {ctx['дата']} в {ctx['время']} — всё верно? Пожалуйста, напишите 'да' для подтверждения."
             send_message(phone, reply)
-            # Здесь можно ждать подтверждения или сразу бронировать
-            all_services = get_all_services_list()
-            service_id = find_service_id(ctx["услуга"], all_services)
-            all_staff = get_all_staff_list()
-            staff_id = all_staff.get(ctx["мастер"])
-            date_time = f"{ctx['дата']} {ctx['время']}"
-            if not service_id:
-                send_message(phone, f"Не могу найти услугу '{ctx['услуга']}'. Вот список доступных: {', '.join(all_services.keys())}")
-                return "OK", 200
-            if not staff_id:
-                send_message(phone, f"Не могу найти мастера '{ctx['мастер']}'. Вот кто доступен: {', '.join(all_staff.keys())}")
-                return "OK", 200
-            try:
-                book(ctx["мастер"], phone, "noemail@email.com", service_id, date_time, staff_id, "auto-book")
-                send_message(phone, "Вы успешно записаны! Ждём вас в нашем салоне.")
-                # После записи — очищаем контекст пользователя
-                user_context[phone] = {"услуга": None, "мастер": None, "дата": None, "время": None}
-            except Exception as e:
-                send_message(phone, f"Произошла ошибка при записи: {e}")
+            ctx["pending_confirmation"] = True
             return "OK", 200
 
     except Exception as e:
@@ -209,4 +204,3 @@ def home():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000)
-
