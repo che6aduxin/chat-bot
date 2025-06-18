@@ -73,14 +73,19 @@ def send_message(phone, text):
 functions = [
     {
         "name": "book_service",
-        "description": "Записать пользователя на услугу в салоне красоты",
+        "description": (
+            "Бронирование услуги в салоне красоты. "
+            "ВСЕГДА вызывай функцию, если в сообщении есть все четыре параметра: "
+            "услуга, мастер, дата (ДД.ММ.ГГГГ), время (ЧЧ:ММ). "
+            "Если не хватает параметров — спроси только их."
+        ),
         "parameters": {
             "type": "object",
             "properties": {
-                "service": {"type": "string", "description": "Название услуги"},
-                "master": {"type": "string", "description": "Имя мастера"},
-                "date": {"type": "string", "description": "Дата (например, 19.06.2025)"},
-                "time": {"type": "string", "description": "Время (например, 13:00)"}
+                "service": {"type": "string", "description": "Название услуги, например 'Массаж'"},
+                "master": {"type": "string", "description": "Имя мастера, например 'Андрей'"},
+                "date": {"type": "string", "description": "Дата в формате ДД.ММ.ГГГГ, например '19.06.2025'"},
+                "time": {"type": "string", "description": "Время в формате ЧЧ:ММ, например '13:00'"}
             },
             "required": ["service", "master", "date", "time"]
         }
@@ -109,24 +114,37 @@ def webhook():
 
         phone = data['senderData']['chatId'].replace("@c.us", "")
 
-        # --- Вызываем OpenAI с function calling ---
+        # ----- LOG: Входящее сообщение -----
+        print(f"Входящее сообщение: '{message}' от {phone}")
+
+        # --- ВАЖНО! SYSTEM PROMPT очень строгий:
+        system_prompt = (
+            "Ты виртуальный ассистент салона красоты. "
+            "ЕСЛИ в сообщении пользователя есть все параметры (услуга, мастер, дата, время), "
+            "ВСЕГДА вызывай функцию book_service, не отвечай текстом! "
+            "Если чего-то не хватает — спроси только недостающие поля. "
+            "Формат даты: ДД.ММ.ГГГГ. Формат времени: ЧЧ:ММ. "
+            "Пример: 'Массаж, Андрей, 19.06.2025, 13:00'"
+        )
+
+        print("Отправляем в OpenAI system prompt:", system_prompt)
+
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=[
-                {"role": "system", "content": "Ты вежливый администратор салона красоты. Помоги клиенту записаться на услугу, если он сообщил параметры бронирования — вызови функцию book_service."},
+                {"role": "system", "content": system_prompt},
                 {"role": "user", "content": message}
             ],
             functions=functions,
             function_call="auto",
-            temperature=0.2
+            temperature=0.1
         )
 
         choice = response.choices[0].message
-        # Логируем что приходит
-        print("Ответ OpenAI:", choice)
+        print("\n--- ПОЛНЫЙ ОТВЕТ OpenAI ---\n", choice, "\n---------------------------\n")
 
         # Если GPT вызвал функцию booking
-        if hasattr(choice, "function_call") and choice.function_call:
+        if getattr(choice, "function_call", None):
             args = json.loads(choice.function_call.arguments)
             print("Function call args:", args)
 
@@ -137,26 +155,35 @@ def webhook():
             staff_id = all_staff.get(args['master'])
             date_time = f"{args['date']} {args['time']}"
 
+            # Диагностика: что не нашлось?
             if not service_id:
-                send_message(phone, f"Не могу найти услугу '{args['service']}'. Вот список доступных: {', '.join(all_services.keys())}")
+                err_msg = f"❗️Услуга '{args['service']}' не найдена. Есть: {', '.join(all_services.keys())}"
+                print(err_msg)
+                send_message(phone, err_msg)
                 return "OK", 200
             if not staff_id:
-                send_message(phone, f"Не могу найти мастера '{args['master']}'. Вот кто доступен: {', '.join(all_staff.keys())}")
+                err_msg = f"❗️Мастер '{args['master']}' не найден. Доступные: {', '.join(all_staff.keys())}"
+                print(err_msg)
+                send_message(phone, err_msg)
                 return "OK", 200
 
             try:
                 book(args['master'], phone, "noemail@email.com", service_id, date_time, staff_id, "auto-book")
-                send_message(phone, f"Вы успешно записаны на {args['service']} к мастеру {args['master']} {args['date']} в {args['time']}! Ждём вас в нашем салоне.")
+                ok_msg = f"Вы успешно записаны на {args['service']} к мастеру {args['master']} {args['date']} в {args['time']}! Ждём вас в салоне."
+                print(ok_msg)
+                send_message(phone, ok_msg)
             except Exception as e:
+                print("Ошибка при бронировании:", e)
                 send_message(phone, f"Произошла ошибка при записи: {e}")
             return "OK", 200
 
-        # Если GPT не смог извлечь параметры — попроси уточнить
+        # Если GPT не смог вызвать функцию (или не попытался)
         else:
-            if choice.content and "услуга" in choice.content.lower():
-                send_message(phone, "Пожалуйста, укажите услугу, мастера, дату и время для записи (можно одним сообщением).")
+            print("⚠️ GPT не вызвал функцию! Полный ответ:", choice)
+            if choice.content:
+                send_message(phone, "Бот не смог автоматически распознать все параметры. Пожалуйста, укажите услугу, мастера, дату и время в формате: Услуга, Мастер, ДД.ММ.ГГГГ, ЧЧ:ММ\n\n" + "GPT ответ: " + choice.content)
             else:
-                send_message(phone, choice.content or "Поясните, пожалуйста!")
+                send_message(phone, "Бот не вызвал функцию бронирования. Проверьте формат сообщения и попробуйте ещё раз.")
             return "OK", 200
 
     except Exception as e:
