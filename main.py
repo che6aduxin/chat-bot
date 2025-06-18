@@ -2,6 +2,7 @@ from flask import Flask, request
 import requests
 import os
 import openai
+import json
 from yclients import YClientsAPI
 
 app = Flask(__name__)
@@ -19,8 +20,6 @@ api = YClientsAPI(
     company_id=YCLIENTS_COMPANY_ID,
     form_id="1"
 )
-
-user_context = {}
 
 def get_all_staff_list():
     all_staff = api.get_staff()
@@ -61,37 +60,6 @@ def book(name, phone, email, service_id, date_time, staff_id, comment):
     )
     return res
 
-def find_booking_intent(ctx, user_message):
-    prompt = (
-        f"Ты администратор салона красоты. Клиент уже сообщил: {ctx}. "
-        "Сейчас он пишет: " + user_message +
-        "\nВыдели, есть ли новая информация по услуге, мастеру, дате или времени. "
-        "Ответь в формате: 'услуга:...; мастер:...; дата:...; время:...'. Если чего-то нет — укажи NA."
-        "\nЕсли клиент просит показать список услуг или интересуется их наличием, напиши: 'показать_услуги'."
-    )
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "Ты администратор салона. Анализируешь реплики клиента и определяешь заполненные поля (услуга, мастер, дата, время)."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.3,
-        )
-        return response.choices[0].message.content
-    except Exception as e:
-        print("Ошибка ChatGPT:", e)
-        return None
-
-def ask_for_next_field(ctx, field):
-    questions = {
-        "услуга": "Какую услугу вы хотите?",
-        "мастер": "К какому мастеру вы хотите записаться?",
-        "дата": "На какую дату хотите записаться?",
-        "время": "Во сколько вам удобно прийти?"
-    }
-    return questions.get(field, "Поясните, пожалуйста!")
-
 def send_message(phone, text):
     url = f"https://api.green-api.com/waInstance{GREEN_API_ID}/sendMessage/{GREEN_API_TOKEN}"
     payload = {
@@ -101,22 +69,23 @@ def send_message(phone, text):
     response = requests.post(url, json=payload)
     print(f"Green API ответ: {response.status_code} - {response.text}")
 
-def update_context_from_message(ctx, message):
-    intent = find_booking_intent(ctx, message)
-    print("Booking intent:", intent)
-    if intent and "показать_услуги" in intent:
-        ctx["show_services"] = True
-        return
-    try:
-        for part in intent.split(";"):
-            if ":" in part:
-                key, value = part.strip().split(":", 1)
-                key = key.strip()
-                value = value.strip()
-                if value and value != "NA":
-                    ctx[key] = value
-    except Exception as e:
-        print("Парсинг намерения не удался:", e)
+# --- Function calling спецификация ---
+functions = [
+    {
+        "name": "book_service",
+        "description": "Записать пользователя на услугу в салоне красоты",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "service": {"type": "string", "description": "Название услуги"},
+                "master": {"type": "string", "description": "Имя мастера"},
+                "date": {"type": "string", "description": "Дата (например, 19.06.2025)"},
+                "time": {"type": "string", "description": "Время (например, 13:00)"}
+            },
+            "required": ["service", "master", "date", "time"]
+        }
+    }
+]
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
@@ -140,62 +109,59 @@ def webhook():
 
         phone = data['senderData']['chatId'].replace("@c.us", "")
 
-        # Контекст пользователя
-        if phone not in user_context:
-            user_context[phone] = {"услуга": None, "мастер": None, "дата": None, "время": None, "pending_confirmation": False}
-        ctx = user_context[phone]
+        # --- Вызываем OpenAI с function calling ---
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "Ты вежливый администратор салона красоты. Помоги клиенту записаться на услугу, если он сообщил параметры бронирования — вызови функцию book_service."},
+                {"role": "user", "content": message}
+            ],
+            functions=functions,
+            function_call="auto",
+            temperature=0.2
+        )
 
-        # Обновляем контекст по текущему сообщению
-        ctx["show_services"] = False
-        update_context_from_message(ctx, message)
+        choice = response.choices[0].message
+        # Логируем что приходит
+        print("Ответ OpenAI:", choice)
 
-        # Если пользователь ждёт подтверждение (pending_confirmation=True)
-        if ctx.get("pending_confirmation"):
-            if message.strip().lower() in ["да", "да, всё верно", "всё верно", "подтверждаю", "ок", "yes"]:
-                all_services = get_all_services_list()
-                service_id = find_service_id(ctx["услуга"], all_services)
-                all_staff = get_all_staff_list()
-                staff_id = all_staff.get(ctx["мастер"])
-                date_time = f"{ctx['дата']} {ctx['время']}"
-                if not service_id:
-                    send_message(phone, f"Не могу найти услугу '{ctx['услуга']}'. Вот список доступных: {', '.join(all_services.keys())}")
-                elif not staff_id:
-                    send_message(phone, f"Не могу найти мастера '{ctx['мастер']}'. Вот кто доступен: {', '.join(all_staff.keys())}")
-                else:
-                    try:
-                        book(ctx["мастер"], phone, "noemail@email.com", service_id, date_time, staff_id, "auto-book")
-                        send_message(phone, "Вы успешно записаны! Ждём вас в нашем салоне.")
-                    except Exception as e:
-                        send_message(phone, f"Произошла ошибка при записи: {e}")
-                # Сброс контекста
-                user_context[phone] = {"услуга": None, "мастер": None, "дата": None, "время": None, "pending_confirmation": False}
-            else:
-                send_message(phone, "Запись не подтверждена. Если хотите записаться, напишите 'да'.")
-            return "OK", 200
+        # Если GPT вызвал функцию booking
+        if hasattr(choice, "function_call") and choice.function_call:
+            args = json.loads(choice.function_call.arguments)
+            print("Function call args:", args)
 
-        # Если человек спросил про услуги — показать список и выйти из функции
-        if ctx.get("show_services"):
+            # Проверяем есть ли такие услуга и мастер в базе
             all_services = get_all_services_list()
-            send_message(phone, "Вот наши услуги: " + ", ".join(all_services.keys()))
-            ctx["show_services"] = False
+            all_staff = get_all_staff_list()
+            service_id = find_service_id(args['service'], all_services)
+            staff_id = all_staff.get(args['master'])
+            date_time = f"{args['date']} {args['time']}"
+
+            if not service_id:
+                send_message(phone, f"Не могу найти услугу '{args['service']}'. Вот список доступных: {', '.join(all_services.keys())}")
+                return "OK", 200
+            if not staff_id:
+                send_message(phone, f"Не могу найти мастера '{args['master']}'. Вот кто доступен: {', '.join(all_staff.keys())}")
+                return "OK", 200
+
+            try:
+                book(args['master'], phone, "noemail@email.com", service_id, date_time, staff_id, "auto-book")
+                send_message(phone, f"Вы успешно записаны на {args['service']} к мастеру {args['master']} {args['date']} в {args['time']}! Ждём вас в нашем салоне.")
+            except Exception as e:
+                send_message(phone, f"Произошла ошибка при записи: {e}")
             return "OK", 200
 
-        # Проверяем, чего не хватает
-        missing = [k for k, v in ctx.items() if not v and k not in ["show_services", "pending_confirmation"]]
-        if missing:
-            next_field = missing[0]
-            reply = ask_for_next_field(ctx, next_field)
-            send_message(phone, reply)
-            return "OK", 200
+        # Если GPT не смог извлечь параметры — попроси уточнить
         else:
-            # Все поля заполнены — просим подтверждение!
-            reply = f"Вы хотите {ctx['услуга']} у {ctx['мастер']} {ctx['дата']} в {ctx['время']} — всё верно? Пожалуйста, напишите 'да' для подтверждения."
-            send_message(phone, reply)
-            ctx["pending_confirmation"] = True
+            if choice.content and "услуга" in choice.content.lower():
+                send_message(phone, "Пожалуйста, укажите услугу, мастера, дату и время для записи (можно одним сообщением).")
+            else:
+                send_message(phone, choice.content or "Поясните, пожалуйста!")
             return "OK", 200
 
     except Exception as e:
         print("Ошибка в webhook:", e)
+        send_message(phone, "Произошла внутренняя ошибка, попробуйте позже.")
     return "OK", 200
 
 @app.route("/", methods=["GET"])
