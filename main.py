@@ -187,7 +187,35 @@ tools = [
             "properties": {},
             "required": [] 
         }
-    } 
+    },
+    {
+        "type": "function",
+        "name": "get_services_title_list_for_staff",
+        "description": (
+            "Возвращает список услуг, которые выполняет конкретный работник по id этого работника"
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                 "staff_id": {"type": "string", "description": "id работника, для которого ищется список улуг"}
+            },
+            "required": ["staff_id"]   
+        }
+    },
+    {
+        "type": "function",
+        "name": "get_service_info",
+        "description": (
+            "Возвращает описание услуги по ее id в виде списка, где первым элементом является название услуги, вторым является цена услуги в рублях, а третьим является длительность услуги в минутах"
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                 "service_id": {"type": "string", "description": "id услуги для которой нужно описание"}
+            },
+            "required": ["service_id"]
+        }
+    }
 ]
 
 def send_message(phone, text):
