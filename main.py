@@ -136,9 +136,9 @@ import json
 # client = openai.OpenAI(api_key=OPENAI_API_TOKEN)
 
 # Для теста — впиши ключ вручную или используй окружение:
-GREEN_API_ID = "ТВОЙ_ID"  # <-- замени на свой
-GREEN_API_TOKEN = "ТВОЙ_TOKEN"  # <-- замени на свой
-OPENAI_API_TOKEN = "sk-..."  # <-- замени на свой
+GREEN_API_ID = os.getenv("GREEN_API_ID")
+GREEN_API_TOKEN = os.getenv("GREEN_API_TOKEN")
+OPENAI_API_TOKEN = os.getenv("OPENAI_API_TOKEN") # <-- замени на свой
 
 client = openai.OpenAI(api_key=OPENAI_API_TOKEN)
 app = Flask(__name__)
