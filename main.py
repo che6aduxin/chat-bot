@@ -112,11 +112,11 @@ def get_available_times_for_service(service_id, date):
                 available_times.append(_)
     return available_times
 
-def book(name, phone, email, service_id, date_time, staff_id, comment):
+def book(name, phone, service_id, date_time, staff_id, comment):
     api.book(booking_id=0,
              fullname=name,
              phone=phone,
-             email=email,
+             email="noemail@noemail.com",
              service_id=service_id,
              date_time=date_time,
              staff_id=staff_id,
@@ -225,7 +225,7 @@ tools = [
         "parameters": {
             "type": "object",
             "properties": {
-                "staff_id": {"type": "string", "description": "id работника"}
+                "staff_id": {"type": "string", "description": "id работника"},
                 "service_id": {"type": "string", "description": "id услуги"}
             },
             "required": ["staff_id", "service_id"]
@@ -235,7 +235,7 @@ tools = [
         "type": "function",
         "name": "get_available_dates_for_service",
         "description": (
-            "Возвращет список дат на которые доступна запись для заданной услуги в формате ГГГГ-ММ-ДД "
+            "Возвращет список дат на которые доступна запись для заданной услуги (без указания конкретного работника) в формате ГГГГ-ММ-ДД "
         ),
         "parameters": {
             "type": "object",
@@ -258,6 +258,72 @@ tools = [
                 "date": {"type": "string", "description": "дата в формате ГГГГ-ММ-ДД"}
             },
             "required": ["service_id", "date"]
+        }
+    },
+    {
+        "type": "function",
+        "name": "get_staff_for_date_time_service",
+        "description": (
+            "Возвращает список с id перслонала, доступного в заданную дату, на заданное время, и на заданную услугу"
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "service_id": {"type": "string", "description": "id услуги"},
+                "date": {"type": "string", "description": "дата в формате ГГГГ-ММ-ДД"},
+                "time": {"type": "string", "description": "время в формате ЧЧ:ММ"}
+            },
+            "required": ["service_id", "date", "time"]
+        }
+    },
+    {
+        "type": "function",
+        "name": "get_available_times_for_staff_service",
+        "description": (
+            "Возвращает список доступных времен для записи на заданную услугу к заданному работнику"
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "staff_id": {"type": "string", "description": "id работника"},
+                "service_id": {"type": "string", "description": "id услуги"},
+                "date": {"type": "string", "description": "дата в формате ГГГГ-ММ-ДД"}
+            },
+            "required": ["staff_id", "service_id", "date"]
+        }
+    },
+    {
+        "type": "function",
+        "name": "get_available_times_for_service",
+        "description": (
+            "Возвращает список доступных времен для записи на заданную услугу (без указания конкретного работника)"
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "service_id": {"type": "string", "description": "id услуги"},
+                "date": {"type": "string", "description": "дата в формате ГГГГ-ММ-ДД"}
+            },
+            "required": ["service_id", "date"]
+        }
+    },
+    {
+        "type": "function",
+        "name": "book",
+        "description": (
+            "выполняет запись клиента на заданное время, в заданную дату, на заданную услугу и к заданному работнику"
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string", "description": "имя клиента"},
+                "phone": {"type": "string", "description": "номер телефона клиента"},
+                "service_id": {"type": "string", "description": "id услуги"},
+                "date_time": {"type": "string", "description": "дата и время в формате ГГГГ-ММ-ДД'T'ЧЧ:ММ:СС'+3:00'"},
+                "staff_id": {"type": "string", "description": "id работника"},
+                "comment": {"type": "string", "description": "комментарий к записи от клиента, если не указан клиентом, то возвращать в виде аргумента функции 'Запись через Whatsapp'"}
+            },
+            "required": ["name", "phone", "service_id", "date_time", "staff_id", "comment"]
         }
     }
 ]
@@ -345,7 +411,6 @@ def webhook():
                 book(
                     name=args['master'],
                     phone=phone,
-                    email="noemail@email.com",
                     service_id=service_id,
                     date_time=date_time,
                     staff_id=staff_id,
