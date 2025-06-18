@@ -197,7 +197,7 @@ tools = [
         "parameters": {
             "type": "object",
             "properties": {
-                 "staff_id": {"type": "string", "description": "id работника, для которого ищется список улуг"}
+                "staff_id": {"type": "string", "description": "id работника, для которого ищется список улуг"}
             },
             "required": ["staff_id"]   
         }
@@ -211,10 +211,25 @@ tools = [
         "parameters": {
             "type": "object",
             "properties": {
-                 "service_id": {"type": "string", "description": "id услуги для которой нужно описание"}
+                "service_id": {"type": "string", "description": "id услуги для которой нужно найти название, цену или длительность"}
             },
             "required": ["service_id"]
         }
+    },
+    {
+        "type": "function",
+        "name": "get_available_dates_for_staff_service",
+        "description": (
+            "Возвращет список дат на которые доступна запись для заданного работника и услуги в формате ГГГГ-ММ-ДД "
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "staff_id": {"type": "string", "description": "id работника"}
+                "service_id": {"type": "string", "description": "id услуги"}
+            },
+            "required": ["staff_id", "service_id"]
+        }  
     }
 ]
 
