@@ -144,8 +144,9 @@ OPENAI_API_TOKEN = os.getenv("OPENAI_API_TOKEN") # <-- замени на сво�
 client = openai.OpenAI(api_key=OPENAI_API_TOKEN)
 app = Flask(__name__)
 
-functions = [
+tools = [
     {
+        "type": "function",
         "name": "book_service",
         "description": (
             "Бронирование услуги в салоне красоты. "
@@ -164,6 +165,7 @@ functions = [
         }
     },
     {
+        "type": "function"
         "name": "get_all_staff_list",
         "description": (
             "Возвращает словарь со всем персоналом, где ключами являются имена сотрудников, а значаниями являются их id"
@@ -219,7 +221,7 @@ def webhook():
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": message}
             ],
-            functions=functions,
+            tools=tools,
             function_call="auto",
             temperature=0.1
         )
