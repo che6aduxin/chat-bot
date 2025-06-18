@@ -13,7 +13,8 @@ OPENAI_API_TOKEN = os.getenv("OPENAI_API_TOKEN")
 YCLIENTS_API_TOKEN = os.getenv("YCLIENTS_API_TOKEN")
 YCLIENTS_COMPANY_ID = os.getenv("YCLIENTS_COMPANY_ID")
 
-openai.api_key = OPENAI_API_TOKEN
+# Новый клиент OpenAI (v1.x и выше)
+client = openai.OpenAI(api_key=OPENAI_API_TOKEN)
 
 # YClients API — обязательно form_id (любая строка, напр. "1")
 api = YClientsAPI(
@@ -77,20 +78,20 @@ def find_booking_intent(ctx, user_message):
         "\nЕсли клиент просит показать список услуг или интересуется их наличием, напиши: 'показать_услуги'."
     )
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4o",
             messages=[
                 {"role": "system", "content": "Ты администратор салона. Анализируешь реплики клиента и определяешь заполненные поля (услуга, мастер, дата, время)."},
                 {"role": "user", "content": prompt}
-            ]
+            ],
+            temperature=0.3,
         )
-        return response['choices'][0]['message']['content']
+        return response.choices[0].message.content
     except Exception as e:
         print("Ошибка ChatGPT:", e)
         return None
 
 def ask_for_next_field(ctx, field):
-    # Можно сделать вопросы более вариативными через ChatGPT — пока базовые
     questions = {
         "услуга": "Какую услугу вы хотите?",
         "мастер": "К какому мастеру вы хотите записаться?",
@@ -178,7 +179,6 @@ def webhook():
             reply = f"Вы хотите {ctx['услуга']} у {ctx['мастер']} {ctx['дата']} в {ctx['время']} — всё верно?"
             send_message(phone, reply)
             # Здесь можно ждать подтверждения или сразу бронировать
-            # Если бронируем сразу:
             all_services = get_all_services_list()
             service_id = find_service_id(ctx["услуга"], all_services)
             all_staff = get_all_staff_list()
