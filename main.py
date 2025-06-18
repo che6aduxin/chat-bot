@@ -165,7 +165,7 @@ tools = [
         }
     },
     {
-        "type": "function"
+        "type": "function",
         "name": "get_all_staff_list",
         "description": (
             "Возвращает словарь со всем персоналом, где ключами являются имена сотрудников, а значаниями являются их id"
