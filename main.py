@@ -1,4 +1,5 @@
 # --- Функции работы с YClients --- (ТВОЙ КОД, ничего не менял)
+import os
 import yclients
 import httpx
 import ujson
