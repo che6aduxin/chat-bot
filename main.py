@@ -1,27 +1,147 @@
-import os
-import requests
-import openai
+# --- Функции работы с YClients --- (ТВОЙ КОД, ничего не менял)
+import yclients
 import httpx
 import ujson
-import yclients
 from yclients import YClientsAPI
+
+YCLIENTS_API_TOKEN = "m49f9dcb59tdy278d53n"
+YCLIENTS_COMPANY_ID = "1342302"
+YCLIENTS_FORM_ID = "1"
+api = YClientsAPI(token=YCLIENTS_API_TOKEN, company_id=YCLIENTS_COMPANY_ID, form_id=YCLIENTS_FORM_ID)
+
+def get_all_staff_list():
+    all_staff = api.get_staff()
+    print(all_staff)
+    all_staff_list = {}
+    for elem in all_staff['data']:
+        staff_name = elem.get('name')
+        staff_id = elem.get('id')
+        all_staff_list.update({staff_name: staff_id})
+        print(staff_name, staff_id)
+    return all_staff_list
+
+def get_all_staff_list_inv(all_staff_list):
+    all_staff_list_inv = {value: key for key, value in all_staff_list}
+    return all_staff_list_inv
+
+def get_all_services_list():
+    services = api.get_services()
+    print(services)
+    all_services_list = {}
+    services_data = services['data']
+    for elem in services_data['services']:
+        service_title = elem.get('title')
+        service_id = elem.get('id')
+        all_services_list.update({service_title: service_id})
+        print(service_title, service_id)
+    return all_services_list
+
+def get_all_services_list_inv(all_services_list):
+    all_services_list_inv = {value: key for key, value in all_services_list}
+    return all_services_list_inv
+
+def get_services_title_list_for_staff(staff_id):
+    services = api.get_services(staff_id=staff_id)
+    print(services)
+    services = services['data'].get('services')
+    services_title_list_for_staff = []
+    for elem in services:
+        services_title_list_for_staff.append(elem.get('title'))
+    print(services_title_list_for_staff)
+    return services_title_list_for_staff
+
+def get_service_info(service_id):
+    info = api.get_service_info(service_id)
+    service_info = []
+    title = info['data'].get('title')
+    service_info.append(title)
+    price = info['data'].get('price_min')
+    service_info.append(price)
+    duration = int(info['data'].get('duration'))/60
+    service_info.append(duration)
+    return service_info
+
+def get_available_dates_for_staff_service(staff_id, service_id):
+    available_dates = api.get_available_days(staff_id=staff_id, service_id=service_id)
+    print(available_dates)
+    available_dates = available_dates['data'].get('booking_dates')
+    print(available_dates)
+    return available_dates
+
+def get_available_dates_for_service(service_id):
+    available_dates = api.get_available_days(service_id=service_id)
+    print(available_dates)
+    available_dates = available_dates['data'].get('booking_dates')
+    print(available_dates)
+    return available_dates
+
+def get_staff_for_date_service(service_id, date):
+    all_staff_id_list_inv = get_all_staff_list_inv(get_all_staff_list())
+    staff_id_list = []
+    for key in all_staff_id_list_inv:
+        available_for_staff = get_available_dates_for_staff_service(key, service_id)
+        available_for_staff = available_for_staff['data'].get('booking_dates')
+        if date in available_for_staff:
+            staff_id_list.append(key)
+    return staff_id_list
+
+def get_staff_for_date_time_service(service_id, date, time):
+    all_staff_id_list_inv = get_all_staff_list_inv(get_all_staff_list())
+    staff_id_list = []
+    for key in all_staff_id_list_inv:
+        available_time_for_staff = get_available_times_for_staff_service(key, service_id, date)
+        if time in available_time_for_staff:
+            staff_id_list.append(key)
+    return staff_id_list
+
+def get_available_times_for_staff_service(staff_id, service_id, date):
+    time_slots = api.get_available_times(staff_id=staff_id, service_id=service_id, day=date)
+    print(time_slots)
+    available_time = [time_slots['data'].get('time') for elem in time_slots['data']]
+    return available_time
+
+def get_available_times_for_service(service_id, date):
+    staff = get_staff_for_date_service(service_id, date)
+    available_times = []
+    for elem in staff:
+        time_slots = api.get_available_times(staff_id=elem, service_id=service_id, day=date)
+        times = [time_slots['data'].get('time') for elem in time_slots['data']]
+        for _ in times:
+            if _ not in available_times:
+                available_times.append(_)
+    return available_times
+
+def book(name, phone, email, service_id, date_time, staff_id, comment):
+    api.book(booking_id=0,
+             fullname=name,
+             phone=phone,
+             email=email,
+             service_id=service_id,
+             date_time=date_time,
+             staff_id=staff_id,
+             comment=comment)
+    print('booked')
+
+# --- Flask + OpenAI function calling ---
+
+import requests
+import openai
 from flask import Flask, request
 import json
 
-# --- Твои функции для работы с Yclients должны быть определены в этом же файле или импортированы! ---
+# Если используешь переменные окружения для ключей, можешь так:
+# GREEN_API_ID = os.getenv("GREEN_API_ID")
+# GREEN_API_TOKEN = os.getenv("GREEN_API_TOKEN")
+# OPENAI_API_TOKEN = os.getenv("OPENAI_API_TOKEN")
+# client = openai.OpenAI(api_key=OPENAI_API_TOKEN)
 
-# Сюда скопируй все свои функции из блока, который ты присылал ранее:
-# get_all_staff_list(), get_all_services_list(), book(), и т.д.
-# Если они в отдельном файле, можно сделать так:
-# from your_yclients_functions_file import *
-
-app = Flask(__name__)
-
-GREEN_API_ID = os.getenv("GREEN_API_ID")
-GREEN_API_TOKEN = os.getenv("GREEN_API_TOKEN")
-OPENAI_API_TOKEN = os.getenv("OPENAI_API_TOKEN")
+# Для теста — впиши ключ вручную или используй окружение:
+GREEN_API_ID = "ТВОЙ_ID"  # <-- замени на свой
+GREEN_API_TOKEN = "ТВОЙ_TOKEN"  # <-- замени на свой
+OPENAI_API_TOKEN = "sk-..."  # <-- замени на свой
 
 client = openai.OpenAI(api_key=OPENAI_API_TOKEN)
+app = Flask(__name__)
 
 functions = [
     {
