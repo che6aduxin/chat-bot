@@ -4,3 +4,4 @@ openai
 yclients-api
 pandas
 ujson
+httpx
