@@ -175,7 +175,19 @@ tools = [
             "properties": {},
             "required": [] 
         }
-    }
+    },
+    {
+        "type": "function",
+        "name": "get_all_services_list",
+        "description": (
+            "Возвращает словарь со всеми услугами, где ключами являются названия услуг, а значаниями являются их id"
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": [] 
+        }
+    } 
 ]
 
 def send_message(phone, text):
