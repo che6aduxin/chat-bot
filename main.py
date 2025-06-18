@@ -15,9 +15,14 @@ YCLIENTS_COMPANY_ID = os.getenv("YCLIENTS_COMPANY_ID")
 
 openai.api_key = OPENAI_API_TOKEN
 
-api = YClientsAPI(token=YCLIENTS_API_TOKEN, company_id=YCLIENTS_COMPANY_ID)
+# Здесь обязательно указываем form_id, даже если он не используется!
+api = YClientsAPI(
+    token=YCLIENTS_API_TOKEN,
+    company_id=YCLIENTS_COMPANY_ID,
+    form_id="1"
+)
 
-# ------- YCLIENTS ФУНКЦИИ (копируй из своего файла сюда) -------
+# ------- YCLIENTS ФУНКЦИИ -------
 def get_all_staff_list():
     all_staff = api.get_staff()
     staff_dict = {}
