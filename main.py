@@ -180,7 +180,7 @@ def generate_gpt_response(history, user_message, system_prompt):
         model="gpt-4o",
         messages=gpt_messages,
         tools=tools,
-        function_call="none",
+        tool_choice="none",
         temperature=0.1
     )
     return response.choices[0].message.content
@@ -492,7 +492,7 @@ def webhook():
             model="gpt-4o",
             messages=gpt_messages,
             tools=tools,
-            function_call="auto",
+            tool_choice="auto",
             temperature=0.1
         )
 
