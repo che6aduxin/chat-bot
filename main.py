@@ -125,6 +125,52 @@ def book(name, phone, service_id, date_time, staff_id, comment):
 
 # --- Flask + OpenAI function calling ---
 
+# --- Flask + OpenAI function calling ---
+
+import requests
+import openai
+from flask import Flask, request
+import json
+
+# --- Google Apps Script API для работы с памятью и промтами ---
+GAS_API_URL = "https://script.google.com/macros/s/AKfycbxL2dDQWi88cURqq_OFJYLd56JKEuZjLJW41aYqguzedchA1jprv8zpm6Tvk-8eyZdI/exec"
+
+def get_system_prompt():
+    resp = requests.get(GAS_API_URL, params={"type": "prompt"})
+    resp.raise_for_status()
+    return resp.json()
+
+def get_knowledge_base():
+    resp = requests.get(GAS_API_URL, params={"type": "knowledge"})
+    resp.raise_for_status()
+    return resp.json()
+
+def get_memory(user_id):
+    resp = requests.get(GAS_API_URL, params={"type": "memory", "userId": str(user_id)})
+    resp.raise_for_status()
+    return resp.json()
+
+def add_memory(user_id, role, content):
+    payload = {
+        "action": "add",
+        "userId": str(user_id),
+        "role": role,
+        "content": content
+    }
+    resp = requests.post(GAS_API_URL, json=payload)
+    resp.raise_for_status()
+    return resp.json()
+
+def update_memory(user_id, memory_array):
+    payload = {
+        "action": "update",
+        "userId": str(user_id),
+        "memoryArray": memory_array
+    }
+    resp = requests.post(GAS_API_URL, json=payload)
+    resp.raise_for_status()
+    return resp.json()
+
 import requests
 import openai
 from flask import Flask, request
