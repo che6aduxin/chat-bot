@@ -283,7 +283,7 @@ tools = [
             "properties": {
                 "staff_id": {"type": "string", "description": "id работника, для которого ищется список улуг"}
             },
-            "required": ["staff_id"]   
+            "required": ["staff_id"]     
         }
     },
     {
@@ -471,7 +471,7 @@ def webhook():
         print("\n--- ОТВЕТ OPENAI ---\n", choice, "\n----------------------\n")
 
         # Если GPT вызвал функцию бронирования
-                if getattr(choice, "function_call", None):
+        if getattr(choice, "function_call", None):
             fn_name = choice.function_call.name
             args = json.loads(choice.function_call.arguments)
             print("Function call:", fn_name, "| Args:", args)
@@ -666,14 +666,13 @@ def webhook():
             return "OK", 200
 
         else:
-            print("⚠️ GPT не вызвал функцию бронирования! Полный ответ:", choice)
-            if choice.content:
-                send_message(phone, choice.content)
-                add_memory(phone, "assistant", choice.content)
-            else:
-                send_message(phone, "Бот не смог распознать все параметры. Проверьте формат сообщения.")
-                add_memory(phone, "assistant", "Бот не смог распознать все параметры.")
+            print("⚠️ GPT не вызвал функцию — fallback в чистый диалог.")
+             # fallback на генерацию человеческого ответа, даже если функция не вызвана
+            fallback_response = generate_gpt_response(history, message, system_prompt)
+            send_message(phone, fallback_response)
+            add_memory(phone, "assistant", fallback_response)
             return "OK", 200
+
 
     except Exception as e:
         print("Ошибка в webhook:", e)
