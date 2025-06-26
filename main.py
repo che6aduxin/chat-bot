@@ -236,7 +236,7 @@ tools = [
             "parameters": {
                 "type": "object",
                 "properties": {},
-                "required": [] 
+                "required": []
             }
         }
     },
@@ -250,7 +250,7 @@ tools = [
             "parameters": {
                 "type": "object",
                 "properties": {},
-                "required": [] 
+                "required": []
             }
         }
     },
@@ -264,7 +264,7 @@ tools = [
             "parameters": {
                 "type": "object",
                 "properties": {},
-                "required": [] 
+                "required": []
             }
         }
     },
@@ -294,7 +294,7 @@ tools = [
                 "properties": {
                     "staff_id": {"type": "string", "description": "id работника, для которого ищется список улуг"}
                 },
-                "required": ["staff_id"]     
+                "required": ["staff_id"]
             }
         }
     },
@@ -328,7 +328,7 @@ tools = [
                     "service_id": {"type": "string", "description": "id услуги"}
                 },
                 "required": ["staff_id", "service_id"]
-            }  
+            }
         }
     },
     {
@@ -439,6 +439,7 @@ tools = [
         }
     }
 ]
+
 
 
 def send_message(phone, text):
