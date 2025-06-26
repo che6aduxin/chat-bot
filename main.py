@@ -171,6 +171,20 @@ def update_memory(user_id, memory_array):
     resp.raise_for_status()
     return resp.json()
 
+def generate_gpt_response(history, user_message, system_prompt):
+    gpt_messages = [{"role": "system", "content": system_prompt}]
+    for msg in history:
+        gpt_messages.append({"role": msg["role"], "content": msg["content"]})
+    gpt_messages.append({"role": "user", "content": user_message})
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=gpt_messages,
+        tools=tools,
+        function_call="none",
+        temperature=0.1
+    )
+    return response.choices[0].message.content
+
 import requests
 import openai
 from flask import Flask, request
