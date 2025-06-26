@@ -207,210 +207,239 @@ app = Flask(__name__)
 tools = [
     {
         "type": "function",
-        "name": "book_service",
-        "description": (
-            "Бронирование услуги в салоне красоты. "
-            "Если сообщение пользователя содержит услугу, мастера, дату (ДД.ММ.ГГГГ) и время (ЧЧ:ММ), ВСЕГДА вызывай функцию. "
-            "Если чего-то не хватает — спроси только это. Не отвечай текстом, если все параметры есть."
-        ),
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "service": {"type": "string", "description": "Название услуги, например 'Массаж лица'"},
-                "master": {"type": "string", "description": "Имя мастера, например 'Андрей'"},
-                "date": {"type": "string", "description": "Дата в формате ДД.ММ.ГГГГ"},
-                "time": {"type": "string", "description": "Время в формате ЧЧ:ММ"}
-            },
-            "required": ["service", "master", "date", "time"]
+        "function": {
+            "name": "book_service",
+            "description": (
+                "Бронирование услуги в салоне красоты. "
+                "Если сообщение пользователя содержит услугу, мастера, дату (ДД.ММ.ГГГГ) и время (ЧЧ:ММ), ВСЕГДА вызывай функцию. "
+                "Если чего-то не хватает — спроси только это. Не отвечай текстом, если все параметры есть."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "service": {"type": "string", "description": "Название услуги, например 'Массаж лица'"},
+                    "master": {"type": "string", "description": "Имя мастера, например 'Андрей'"},
+                    "date": {"type": "string", "description": "Дата в формате ДД.ММ.ГГГГ"},
+                    "time": {"type": "string", "description": "Время в формате ЧЧ:ММ"}
+                },
+                "required": ["service", "master", "date", "time"]
+            }
         }
     },
     {
         "type": "function",
-        "name": "get_all_staff_list",
-        "description": (
-            "Возвращает словарь со всем персоналом, где ключами являются имена сотрудников, а значаниями являются их id"
-        ),
-        "parameters": {
-            "type": "object",
-            "properties": {},
-            "required": [] 
+        "function": {
+            "name": "get_all_staff_list",
+            "description": (
+                "Возвращает словарь со всем персоналом, где ключами являются имена сотрудников, а значаниями являются их id"
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": [] 
+            }
         }
     },
     {
         "type": "function",
-        "name": "get_all_staff_list_inv",
-        "description": (
-            "Возвращает словарь со всем персоналом, где ключами являются id сотрудников, а значаниями являются их имена"
-        ),
-        "parameters": {
-            "type": "object",
-            "properties": {},
-            "required": [] 
+        "function": {
+            "name": "get_all_staff_list_inv",
+            "description": (
+                "Возвращает словарь со всем персоналом, где ключами являются id сотрудников, а значаниями являются их имена"
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": [] 
+            }
         }
     },
     {
         "type": "function",
-        "name": "get_all_services_list",
-        "description": (
-            "Возвращает словарь со всеми услугами, где ключами являются названия услуг, а значаниями являются их id"
-        ),
-        "parameters": {
-            "type": "object",
-            "properties": {},
-            "required": [] 
+        "function": {
+            "name": "get_all_services_list",
+            "description": (
+                "Возвращает словарь со всеми услугами, где ключами являются названия услуг, а значаниями являются их id"
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": [] 
+            }
         }
     },
     {
         "type": "function",
-        "name": "get_all_services_list_inv",
-        "description": (
-            "Возвращает словарь со всеми услугами, где ключами являются id услуг, а значаниями являются их названия"
-        ),
-        "parameters": {
-            "type": "object",
-            "properties": {},
-            "required": []
+        "function": {
+            "name": "get_all_services_list_inv",
+            "description": (
+                "Возвращает словарь со всеми услугами, где ключами являются id услуг, а значаниями являются их названия"
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
         }
     },
     {
         "type": "function",
-        "name": "get_services_title_list_for_staff",
-        "description": (
-            "Возвращает список услуг, которые выполняет конкретный работник по id этого работника"
-        ),
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "staff_id": {"type": "string", "description": "id работника, для которого ищется список улуг"}
-            },
-            "required": ["staff_id"]     
+        "function": {
+            "name": "get_services_title_list_for_staff",
+            "description": (
+                "Возвращает список услуг, которые выполняет конкретный работник по id этого работника"
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "staff_id": {"type": "string", "description": "id работника, для которого ищется список улуг"}
+                },
+                "required": ["staff_id"]     
+            }
         }
     },
     {
         "type": "function",
-        "name": "get_service_info",
-        "description": (
-            "Возвращает описание услуги по ее id в виде списка, где первым элементом является название услуги, вторым является цена услуги в рублях, а третьим является длительность услуги в минутах"
-        ),
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "service_id": {"type": "string", "description": "id услуги для которой нужно найти название, цену или длительность"}
-            },
-            "required": ["service_id"]
+        "function": {
+            "name": "get_service_info",
+            "description": (
+                "Возвращает описание услуги по ее id в виде списка, где первым элементом является название услуги, вторым является цена услуги в рублях, а третьим является длительность услуги в минутах"
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "service_id": {"type": "string", "description": "id услуги для которой нужно найти название, цену или длительность"}
+                },
+                "required": ["service_id"]
+            }
         }
     },
     {
         "type": "function",
-        "name": "get_available_dates_for_staff_service",
-        "description": (
-            "Возвращет список дат на которые доступна запись для заданного работника и услуги в формате ГГГГ-ММ-ДД "
-        ),
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "staff_id": {"type": "string", "description": "id работника"},
-                "service_id": {"type": "string", "description": "id услуги"}
-            },
-            "required": ["staff_id", "service_id"]
-        }  
-    },
-    {
-        "type": "function",
-        "name": "get_available_dates_for_service",
-        "description": (
-            "Возвращет список дат на которые доступна запись для заданной услуги (без указания конкретного работника) в формате ГГГГ-ММ-ДД "
-        ),
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "service_id": {"type": "string", "description": "id услуги"}
-            },
-            "required": ["service_id"]
+        "function": {
+            "name": "get_available_dates_for_staff_service",
+            "description": (
+                "Возвращет список дат на которые доступна запись для заданного работника и услуги в формате ГГГГ-ММ-ДД "
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "staff_id": {"type": "string", "description": "id работника"},
+                    "service_id": {"type": "string", "description": "id услуги"}
+                },
+                "required": ["staff_id", "service_id"]
+            }  
         }
     },
     {
         "type": "function",
-        "name": "get_staff_for_date_service",
-        "description": (
-            "Возвращает список с id перслонала, доступного в заданную дату и на заданную услугу"
-        ),
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "service_id": {"type": "string", "description": "id услуги"},
-                "date": {"type": "string", "description": "дата в формате ГГГГ-ММ-ДД"}
-            },
-            "required": ["service_id", "date"]
+        "function": {
+            "name": "get_available_dates_for_service",
+            "description": (
+                "Возвращет список дат на которые доступна запись для заданной услуги (без указания конкретного работника) в формате ГГГГ-ММ-ДД "
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "service_id": {"type": "string", "description": "id услуги"}
+                },
+                "required": ["service_id"]
+            }
         }
     },
     {
         "type": "function",
-        "name": "get_staff_for_date_time_service",
-        "description": (
-            "Возвращает список с id перслонала, доступного в заданную дату, на заданное время, и на заданную услугу"
-        ),
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "service_id": {"type": "string", "description": "id услуги"},
-                "date": {"type": "string", "description": "дата в формате ГГГГ-ММ-ДД"},
-                "time": {"type": "string", "description": "время в формате ЧЧ:ММ"}
-            },
-            "required": ["service_id", "date", "time"]
+        "function": {
+            "name": "get_staff_for_date_service",
+            "description": (
+                "Возвращает список с id перслонала, доступного в заданную дату и на заданную услугу"
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "service_id": {"type": "string", "description": "id услуги"},
+                    "date": {"type": "string", "description": "дата в формате ГГГГ-ММ-ДД"}
+                },
+                "required": ["service_id", "date"]
+            }
         }
     },
     {
         "type": "function",
-        "name": "get_available_times_for_staff_service",
-        "description": (
-            "Возвращает список доступных времен для записи на заданную услугу к заданному работнику"
-        ),
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "staff_id": {"type": "string", "description": "id работника"},
-                "service_id": {"type": "string", "description": "id услуги"},
-                "date": {"type": "string", "description": "дата в формате ГГГГ-ММ-ДД"}
-            },
-            "required": ["staff_id", "service_id", "date"]
+        "function": {
+            "name": "get_staff_for_date_time_service",
+            "description": (
+                "Возвращает список с id перслонала, доступного в заданную дату, на заданное время, и на заданную услугу"
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "service_id": {"type": "string", "description": "id услуги"},
+                    "date": {"type": "string", "description": "дата в формате ГГГГ-ММ-ДД"},
+                    "time": {"type": "string", "description": "время в формате ЧЧ:ММ"}
+                },
+                "required": ["service_id", "date", "time"]
+            }
         }
     },
     {
         "type": "function",
-        "name": "get_available_times_for_service",
-        "description": (
-            "Возвращает список доступных времен для записи на заданную услугу (без указания конкретного работника)"
-        ),
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "service_id": {"type": "string", "description": "id услуги"},
-                "date": {"type": "string", "description": "дата в формате ГГГГ-ММ-ДД"}
-            },
-            "required": ["service_id", "date"]
+        "function": {
+            "name": "get_available_times_for_staff_service",
+            "description": (
+                "Возвращает список доступных времен для записи на заданную услугу к заданному работнику"
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "staff_id": {"type": "string", "description": "id работника"},
+                    "service_id": {"type": "string", "description": "id услуги"},
+                    "date": {"type": "string", "description": "дата в формате ГГГГ-ММ-ДД"}
+                },
+                "required": ["staff_id", "service_id", "date"]
+            }
         }
     },
     {
         "type": "function",
-        "name": "book",
-        "description": (
-            "выполняет запись клиента на заданное время, в заданную дату, на заданную услугу и к заданному работнику"
-        ),
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "name": {"type": "string", "description": "имя клиента"},
-                "phone": {"type": "string", "description": "номер телефона клиента"},
-                "service_id": {"type": "string", "description": "id услуги"},
-                "date_time": {"type": "string", "description": "дата и время в формате ГГГГ-ММ-ДД'T'ЧЧ:ММ:СС'+3:00'"},
-                "staff_id": {"type": "string", "description": "id работника"},
-                "comment": {"type": "string", "description": "комментарий к записи от клиента, если не указан клиентом, то возвращать в виде аргумента функции 'Запись через Whatsapp'"}
-            },
-            "required": ["name", "phone", "service_id", "date_time", "staff_id", "comment"]
+        "function": {
+            "name": "get_available_times_for_service",
+            "description": (
+                "Возвращает список доступных времен для записи на заданную услугу (без указания конкретного работника)"
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "service_id": {"type": "string", "description": "id услуги"},
+                    "date": {"type": "string", "description": "дата в формате ГГГГ-ММ-ДД"}
+                },
+                "required": ["service_id", "date"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "book",
+            "description": (
+                "выполняет запись клиента на заданное время, в заданную дату, на заданную услугу и к заданному работнику"
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "имя клиента"},
+                    "phone": {"type": "string", "description": "номер телефона клиента"},
+                    "service_id": {"type": "string", "description": "id услуги"},
+                    "date_time": {"type": "string", "description": "дата и время в формате ГГГГ-ММ-ДД'T'ЧЧ:ММ:СС'+3:00'"},
+                    "staff_id": {"type": "string", "description": "id работника"},
+                    "comment": {"type": "string", "description": "комментарий к записи от клиента, если не указан клиентом, то возвращать в виде аргумента функции 'Запись через Whatsapp'"}
+                },
+                "required": ["name", "phone", "service_id", "date_time", "staff_id", "comment"]
+            }
         }
     }
 ]
+
 
 def send_message(phone, text):
     url = f"https://api.green-api.com/waInstance{GREEN_API_ID}/sendMessage/{GREEN_API_TOKEN}"
