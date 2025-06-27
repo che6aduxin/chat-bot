@@ -598,7 +598,7 @@ def webhook():
                         # "content": json.dumps(result, ensure_ascii=False)
                     # }
                 # ]
-                tool_call_id = tool_call.id
+#                tool_call_id = tool_call.id
                 messages_for_gpt = gpt_messages
                 messages_for_gpt.append(tool_call)
                 messages_for_gpt.append({
