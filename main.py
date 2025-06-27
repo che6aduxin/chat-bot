@@ -6,7 +6,7 @@ from yclients import YClientsAPI
 
 YCLIENTS_API_TOKEN = os.getenv("YCLIENTS_API_TOKEN")
 YCLIENTS_COMPANY_ID = os.getenv("YCLIENTS_COMPANY_ID")
-YCLIENTS_FORM_ID = "1"
+YCLIENTS_FORM_ID = os.getenv("YCLIENTS_APPLICATION_ID")
 api = YClientsAPI(token=YCLIENTS_API_TOKEN, company_id=YCLIENTS_COMPANY_ID, form_id=YCLIENTS_FORM_ID)
 
 def get_all_staff_list():
