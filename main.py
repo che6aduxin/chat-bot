@@ -590,14 +590,20 @@ def webhook():
                     result = f"Ошибка при вызове функции: {e}"
 
                 # Supply model with result (обратный вызов GPT)
-                tool_call_id = tool_call.id
-                messages_for_gpt = gpt_messages + [
-                    {
-                        "role": "tool",
-                        "tool_call_id": tool_call_id,
-                        "content": json.dumps(result, ensure_ascii=False)
-                    }
-                ]
+                # tool_call_id = tool_call.id
+                # messages_for_gpt = gpt_messages + [
+                    # {
+                        # "role": "tool",
+                        # "tool_call_id": tool_call_id,
+                        # "content": json.dumps(result, ensure_ascii=False)
+                    # }
+                # ]
+                input_messages.append(tool_call)
+                input_messages.append({
+                    "type": "function_call_output",
+                    "call_id": tool_call.call_id,
+                    "output": str(result)
+                })
                 response2 = client.chat.completions.create(
                     model="gpt-4o",
                     messages=messages_for_gpt,
