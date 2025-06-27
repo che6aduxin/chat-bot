@@ -1,12 +1,11 @@
-# --- Функции работы с YClients --- (ТВОЙ КОД, ничего не менял)
 import os
 import yclients
 import httpx
 import ujson
 from yclients import YClientsAPI
 
-YCLIENTS_API_TOKEN = "m49f9dcb59tdy278d53n"
-YCLIENTS_COMPANY_ID = "1342302"
+YCLIENTS_API_TOKEN = os.getenv("YCLIENTS_API_TOKEN")
+YCLIENTS_COMPANY_ID = os.getenv("YCLIENTS_COMPANY_ID")
 YCLIENTS_FORM_ID = "1"
 api = YClientsAPI(token=YCLIENTS_API_TOKEN, company_id=YCLIENTS_COMPANY_ID, form_id=YCLIENTS_FORM_ID)
 
