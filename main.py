@@ -50,6 +50,14 @@ def get_services_title_list_for_staff(staff_id):
     print(services_title_list_for_staff)
     return services_title_list_for_staff
 
+def get_staff_for_service(service_id):
+    staff_for_service_list = {}
+    data = api.get_staff(service_id=service_id)
+    data = data['data']
+    for elem in data:
+        staff_for_service_list .update({elem.get('name'): elem.get('id')})
+    return staff_for_service_list
+
 def get_service_info(service_id):
     info = api.get_service_info(service_id)
     service_info = []
@@ -294,6 +302,22 @@ tools = [
                     "staff_id": {"type": "string", "description": "id работника, для которого ищется список улуг"}
                 },
                 "required": ["staff_id"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_staff_for_service",
+            "description": (
+                "Возвращает словарь с работниками, которые выполняют конкретную услугу, которая указывается по id услуги, где ключами являются имена сотрудников, а значениями являются их id"
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "staff_id": {"type": "string", "description": "id работника, для которого ищется список улуг"}
+                },
+                "required": ["service_id"]
             }
         }
     },
