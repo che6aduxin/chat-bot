@@ -501,193 +501,89 @@ def webhook():
                 args = json.loads(tool_call.function.arguments)
                 print("Function call:", fn_name, "| Args:", args)
 
-                # 1. Бронирование услуги (book_service)
-                if fn_name == "book_service":
-                    all_services = get_all_services_list()
-                    all_staff = get_all_staff_list()
-                    service_id = all_services.get(args['service'])
-                    staff_id = all_staff.get(args['master'])
-                    date = args['date']
-                    time = args['time']
-                    date_time = f"{date} {time}"
-
-                    if not service_id:
-                        err_msg = f"❗️Услуга '{args['service']}' не найдена. Доступные: {', '.join(all_services.keys())}"
-                        send_message(phone, err_msg)
-                        add_memory(phone, "assistant", err_msg)
-                        continue
-                    if not staff_id:
-                        err_msg = f"❗️Мастер '{args['master']}' не найден. Доступные: {', '.join(all_staff.keys())}"
-                        send_message(phone, err_msg)
-                        add_memory(phone, "assistant", err_msg)
-                        continue
-
-                    try:
-                        book(
-                            name=args['master'],
-                            phone=phone,
-                            service_id=service_id,
-                            date_time=date_time,
-                            staff_id=staff_id,
-                            comment="Запись через WhatsApp"
-                        )
-                        ok_msg = f"✅ Вы успешно записаны на {args['service']} к мастеру {args['master']} {date} в {time}! Ждём вас в салоне."
-                        send_message(phone, ok_msg)
-                        add_memory(phone, "assistant", ok_msg)
-                    except Exception as e:
-                        err_msg = f"Ошибка при записи: {e}"
-                        send_message(phone, err_msg)
-                        add_memory(phone, "assistant", err_msg)
-                    continue
-
-                # 2. get_all_staff_list
-                if fn_name == "get_all_staff_list":
-                    staff = get_all_staff_list()
-                    msg = "Доступные мастера:\n" + "\n".join(list(staff.keys()))
-                    send_message(phone, msg)
-                    add_memory(phone, "assistant", msg)
-                    continue
-
-                # 3. get_all_staff_list_inv
-                if fn_name == "get_all_staff_list_inv":
-                    staff_inv = get_all_staff_list_inv(get_all_staff_list())
-                    msg = "ID -> Мастер:\n" + "\n".join([f"{k}: {v}" for k, v in staff_inv.items()])
-                    send_message(phone, msg)
-                    add_memory(phone, "assistant", msg)
-                    continue
-
-                # 4. get_all_services_list
-                if fn_name == "get_all_services_list":
-                    services = get_all_services_list()
-                    msg = "Доступные услуги:\n" + "\n".join(list(services.keys()))
-                    send_message(phone, msg)
-                    add_memory(phone, "assistant", msg)
-                    continue
-
-                # 5. get_all_services_list_inv
-                if fn_name == "get_all_services_list_inv":
-                    services_inv = get_all_services_list_inv(get_all_services_list())
-                    msg = "ID -> Услуга:\n" + "\n".join([f"{k}: {v}" for k, v in services_inv.items()])
-                    send_message(phone, msg)
-                    add_memory(phone, "assistant", msg)
-                    continue
-
-                # 6. get_services_title_list_for_staff
-                if fn_name == "get_services_title_list_for_staff":
-                    staff_id = args.get("staff_id")
-                    services = get_services_title_list_for_staff(staff_id)
-                    msg = f"Мастер {staff_id} выполняет услуги:\n" + ", ".join(services)
-                    send_message(phone, msg)
-                    add_memory(phone, "assistant", msg)
-                    continue
-
-                # 7. get_service_info
-                if fn_name == "get_service_info":
-                    service_id = args.get("service_id")
-                    info = get_service_info(service_id)
-                    msg = f"Услуга: {info[0]}\nЦена: {info[1]} руб.\nДлительность: {info[2]} мин."
-                    send_message(phone, msg)
-                    add_memory(phone, "assistant", msg)
-                    continue
-
-                # 8. get_available_dates_for_staff_service
-                if fn_name == "get_available_dates_for_staff_service":
-                    staff_id = args.get("staff_id")
-                    service_id = args.get("service_id")
-                    dates = get_available_dates_for_staff_service(staff_id, service_id)
-                    if dates:
-                        msg = "Свободные даты для мастера: " + ", ".join(dates)
+                # --- Универсальный обработчик функций ---
+                result = None
+                try:
+                    if fn_name == "book_service":
+                        all_services = get_all_services_list()
+                        all_staff = get_all_staff_list()
+                        service_id = all_services.get(args['service'])
+                        staff_id = all_staff.get(args['master'])
+                        date = args['date']
+                        time = args['time']
+                        date_time = f"{date} {time}"
+                        if not service_id:
+                            result = f"❗️Услуга '{args['service']}' не найдена. Доступные: {', '.join(all_services.keys())}"
+                        elif not staff_id:
+                            result = f"❗️Мастер '{args['master']}' не найден. Доступные: {', '.join(all_staff.keys())}"
+                        else:
+                            try:
+                                book(
+                                    name=args['master'],
+                                    phone=phone,
+                                    service_id=service_id,
+                                    date_time=date_time,
+                                    staff_id=staff_id,
+                                    comment="Запись через WhatsApp"
+                                )
+                                result = f"✅ Вы успешно записаны на {args['service']} к мастеру {args['master']} {date} в {time}! Ждём вас в салоне."
+                            except Exception as e:
+                                result = f"Ошибка при записи: {e}"
+                    elif fn_name == "get_all_staff_list":
+                        result = get_all_staff_list()
+                    elif fn_name == "get_all_staff_list_inv":
+                        result = get_all_staff_list_inv(get_all_staff_list())
+                    elif fn_name == "get_all_services_list":
+                        result = get_all_services_list()
+                    elif fn_name == "get_all_services_list_inv":
+                        result = get_all_services_list_inv(get_all_services_list())
+                    elif fn_name == "get_services_title_list_for_staff":
+                        result = get_services_title_list_for_staff(args.get("staff_id"))
+                    elif fn_name == "get_service_info":
+                        result = get_service_info(args.get("service_id"))
+                    elif fn_name == "get_available_dates_for_staff_service":
+                        result = get_available_dates_for_staff_service(args.get("staff_id"), args.get("service_id"))
+                    elif fn_name == "get_available_dates_for_service":
+                        result = get_available_dates_for_service(args.get("service_id"))
+                    elif fn_name == "get_staff_for_date_service":
+                        result = get_staff_for_date_service(args.get("service_id"), args.get("date"))
+                    elif fn_name == "get_staff_for_date_time_service":
+                        result = get_staff_for_date_time_service(args.get("service_id"), args.get("date"), args.get("time"))
+                    elif fn_name == "get_available_times_for_staff_service":
+                        result = get_available_times_for_staff_service(args.get("staff_id"), args.get("service_id"), args.get("date"))
+                    elif fn_name == "get_available_times_for_service":
+                        result = get_available_times_for_service(args.get("service_id"), args.get("date"))
+                    elif fn_name == "book":
+                        book(args.get("name"), args.get("phone", phone), args.get("service_id"), args.get("date_time"),
+                             args.get("staff_id"), args.get("comment", "Запись через WhatsApp"))
+                        result = f"✅ Вы успешно записаны на услугу {args.get('service_id')} к мастеру {args.get('staff_id')} на {args.get('date_time')}!"
+                    elif fn_name == "get_knowledge_base":
+                        kb = get_knowledge_base()
+                        result = "\n".join([f"{item['term']}: {item['explanation']}" for item in kb])
                     else:
-                        msg = "Нет доступных дат для этого мастера."
-                    send_message(phone, msg)
-                    add_memory(phone, "assistant", msg)
-                    continue
+                        result = "Функция не реализована или параметры не распознаны."
+                except Exception as e:
+                    result = f"Ошибка при вызове функции: {e}"
 
-                # 9. get_available_dates_for_service
-                if fn_name == "get_available_dates_for_service":
-                    service_id = args.get("service_id")
-                    dates = get_available_dates_for_service(service_id)
-                    if dates:
-                        msg = "Свободные даты: " + ", ".join(dates)
-                    else:
-                        msg = "Нет доступных дат для этой услуги."
-                    send_message(phone, msg)
-                    add_memory(phone, "assistant", msg)
-                    continue
-
-                # 10. get_staff_for_date_service
-                if fn_name == "get_staff_for_date_service":
-                    service_id = args.get("service_id")
-                    date = args.get("date")
-                    staff_ids = get_staff_for_date_service(service_id, date)
-                    msg = f"Доступные мастера на {date}: " + ", ".join(staff_ids)
-                    send_message(phone, msg)
-                    add_memory(phone, "assistant", msg)
-                    continue
-
-                # 11. get_staff_for_date_time_service
-                if fn_name == "get_staff_for_date_time_service":
-                    service_id = args.get("service_id")
-                    date = args.get("date")
-                    time = args.get("time")
-                    staff_ids = get_staff_for_date_time_service(service_id, date, time)
-                    msg = f"Доступные мастера на {date} в {time}: " + ", ".join(staff_ids)
-                    send_message(phone, msg)
-                    add_memory(phone, "assistant", msg)
-                    continue
-
-                # 12. get_available_times_for_staff_service
-                if fn_name == "get_available_times_for_staff_service":
-                    staff_id = args.get("staff_id")
-                    service_id = args.get("service_id")
-                    date = args.get("date")
-                    times = get_available_times_for_staff_service(staff_id, service_id, date)
-                    if times:
-                        msg = f"Доступное время у мастера {staff_id} на {date}: " + ", ".join(times)
-                    else:
-                        msg = f"Нет свободного времени у мастера {staff_id} на {date}."
-                    send_message(phone, msg)
-                    add_memory(phone, "assistant", msg)
-                    continue
-
-                # 13. get_available_times_for_service
-                if fn_name == "get_available_times_for_service":
-                    service_id = args.get("service_id")
-                    date = args.get("date")
-                    times = get_available_times_for_service(service_id, date)
-                    if times:
-                        msg = f"Свободное время на {date}: " + ", ".join(times)
-                    else:
-                        msg = f"Нет свободного времени на {date}."
-                    send_message(phone, msg)
-                    add_memory(phone, "assistant", msg)
-                    continue
-
-                # 14. book
-                if fn_name == "book":
-                    name = args.get("name")
-                    phone_arg = args.get("phone", phone)
-                    service_id = args.get("service_id")
-                    date_time = args.get("date_time")
-                    staff_id = args.get("staff_id")
-                    comment = args.get("comment", "Запись через WhatsApp")
-                    book(name, phone_arg, service_id, date_time, staff_id, comment)
-                    msg = f"✅ Вы успешно записаны на услугу {service_id} к мастеру {staff_id} на {date_time}!"
-                    send_message(phone, msg)
-                    add_memory(phone, "assistant", msg)
-                    continue
-
-                # 15. get_knowledge_base
-                if fn_name == "get_knowledge_base":
-                    kb = get_knowledge_base()
-                    kb_text = "\n".join([f"{item['term']}: {item['explanation']}" for item in kb])
-                    send_message(phone, kb_text)
-                    add_memory(phone, "assistant", kb_text)
-                    continue
-
-                # Если не попало никуда
-                send_message(phone, "Функция не реализована или параметры не распознаны.")
-                add_memory(phone, "assistant", "Функция не реализована или параметры не распознаны.")
+                # Supply model with result (обратный вызов GPT)
+                tool_call_id = tool_call.id
+                messages_for_gpt = gpt_messages + [
+                    {
+                        "role": "tool",
+                        "tool_call_id": tool_call_id,
+                        "content": json.dumps(result, ensure_ascii=False)
+                    }
+                ]
+                response2 = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=messages_for_gpt,
+                    tools=tools,
+                    tool_choice="none",
+                    temperature=0.1
+                )
+                final_answer = response2.choices[0].message.content
+                send_message(phone, final_answer)
+                add_memory(phone, "assistant", final_answer)
 
             return "OK", 200
 
@@ -702,6 +598,7 @@ def webhook():
         print("Ошибка в webhook:", e)
         send_message(phone, "Произошла ошибка на сервере, попробуйте позже.")
         return "OK", 200
+
 
 
 @app.route("/", methods=["GET"])
