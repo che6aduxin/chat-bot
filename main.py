@@ -581,7 +581,20 @@ def webhook():
                     elif fn_name == "get_all_staff_list_inv":
                         result = get_all_staff_list_inv(get_all_staff_list())
                     elif fn_name == "get_all_services_list":
-                        result = get_all_services_list()
+                        filter_str = args.get("filter_str")
+                        if filter_str:
+                            services = get_all_services_list(filter_str=filter_str)
+                                if not services:
+                                    result = f"Не найдено услуг, содержащих '{filter_str}'. Попробуйте другой запрос."
+                                else:
+                                    # Список максимум из 15 (или меньше) названий:
+                                      items = "\n".join([f"• {k}" for k in services.keys()])
+                                        result = f"Найдено {len(services)} услуг(и) по фильтру '{filter_str}':\n{items}"
+                        else:
+                            # Не позволяем ассистенту спамить всеми услугами:
+                        result = ("Для удобства поиска укажите часть названия услуги, например: 'чистка', 'спина', 'лазер'. "
+                          "Я покажу только те услуги, которые соответствуют вашему запросу.")
+
                     elif fn_name == "get_all_services_list_inv":
                         result = get_all_services_list_inv(get_all_services_list())
                     elif fn_name == "get_services_title_list_for_staff":
