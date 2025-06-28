@@ -641,21 +641,11 @@ def webhook():
                                     result = "Нет доступных мастеров для этой услуги."
                             else:
                                 result = "Не удалось получить информацию по мастерам для этой услуги."
-                           elif fn_name == "get_staff_for_date_service":
-                               raw = get_staff_for_date_service(args.get("service_id"), args.get("date"))
-                                if isinstance(raw, list) and raw:
-                                    # Получаем маппинг id → имя
-                                    all_staff_names = get_all_staff_list_inv(get_all_staff_list())
-                                    staff_names = [all_staff_names.get(staff_id, f"ID {staff_id}") for staff_id in raw]
-                                    if staff_names:
-                                        result = "В этот день доступны мастера:\n" + "\n".join(f"{i+1}. {name}" for i, name in enumerate(staff_names))
-                                    else:
-                                        result = "На эту дату нет доступных мастеров."
-                                else:
-                                    result = "Не удалось получить информацию по мастерам."
-
-                            elif isinstance(raw, dict) and raw.get('success') and 'data' in raw:
-                                staff_names = [entry['name'] for entry in raw['data']]
+                        elif fn_name == "get_staff_for_date_service":
+                            raw = get_staff_for_date_service(args.get("service_id"), args.get("date"))
+                            if isinstance(raw, list) and raw:
+                                all_staff_names = get_all_staff_list_inv(get_all_staff_list())
+                                staff_names = [all_staff_names.get(staff_id, f"ID {staff_id}") for staff_id in raw]
                                 if staff_names:
                                     result = "В этот день доступны мастера:\n" + "\n".join(f"{i+1}. {name}" for i, name in enumerate(staff_names))
                                 else:
