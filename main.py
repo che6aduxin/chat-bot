@@ -542,9 +542,28 @@ def webhook():
         print("\n--- ОТВЕТ OPENAI ---\n", choice, "\n----------------------\n")
 
                 # --- Supply-loop: обработка цепочки tool_calls ---
+                # --- Supply-loop: обработка цепочки tool_calls ---
         while True:
             tool_calls = getattr(choice, "tool_calls", None)
             if tool_calls:
+                # 1. assistant step: обязательно добавляем assistant с tool_calls!
+                tool_calls_for_assistant = [
+                    {
+                        "id": tool_call.id,
+                        "type": "function",
+                        "function": {
+                            "name": tool_call.function.name,
+                            "arguments": tool_call.function.arguments
+                        }
+                    }
+                    for tool_call in tool_calls
+                ]
+                gpt_messages.append({
+                    "role": "assistant",
+                    "tool_calls": tool_calls_for_assistant
+                })
+
+                # 2. Добавляем tool-ответы по каждой функции
                 for tool_call in tool_calls:
                     fn_name = tool_call.function.name
                     args = json.loads(tool_call.function.arguments)
@@ -617,15 +636,14 @@ def webhook():
                     except Exception as e:
                         result = f"Ошибка при вызове функции: {e}"
 
-                    # Supply model with result (обратный вызов GPT)
-                    tool_call_id = tool_call.id
-                    # NB! Важно дополнять gpt_messages, чтобы supply-chain работала
+                    # Добавляем tool-ответ (только после assistant!)
                     gpt_messages.append({
                         "role": "tool",
-                        "tool_call_id": tool_call_id,
+                        "tool_call_id": tool_call.id,
                         "content": json.dumps(result, ensure_ascii=False)
                     })
-                # Новый запрос к GPT (после supply функции)
+
+                # 3. Новый запрос к GPT (вся supply-chain)
                 response2 = client.chat.completions.create(
                     model="gpt-4o",
                     messages=gpt_messages,
@@ -634,7 +652,6 @@ def webhook():
                     temperature=0.1
                 )
                 choice = response2.choices[0].message
-                # цикл продолжается — если GPT опять вызывает функцию
                 continue
             else:
                 # Нет tool_calls: выдаём финальный текст пользователю
@@ -642,6 +659,7 @@ def webhook():
                 send_message(phone, final_answer)
                 add_memory(phone, "assistant", final_answer)
                 return "OK", 200
+
 
 
       
