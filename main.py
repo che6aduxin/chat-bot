@@ -541,7 +541,7 @@ def webhook():
         choice = response.choices[0].message
         print("\n--- ОТВЕТ OPENAI ---\n", choice, "\n----------------------\n")
 
-                tool_calls = getattr(choice, "tool_calls", None)
+        tool_calls = getattr(choice, "tool_calls", None)
         if tool_calls:
             for tool_call in tool_calls:
                 fn_name = tool_call.function.name
