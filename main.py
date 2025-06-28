@@ -49,8 +49,8 @@ def normalize_date(date_str):
     # Если ничего не подошло — сегодняшняя дата
     return datetime.date.today().strftime("%Y-%m-%d")
 def get_all_staff_list_inv(all_staff_list):
-    all_staff_list_inv = {value: key for key, value in all_staff_list}
-    return all_staff_list_inv
+    # Корректная инверсия: {имя: id} → {id: имя}
+    return {v: k for k, v in all_staff_list.items()}
 
 def get_all_services_list(filter_str=None, max_results=15):
     """
@@ -128,13 +128,16 @@ def get_available_dates_for_service(service_id):
     return available_dates
 
 def get_staff_for_date_service(service_id, date):
-    all_staff_id_list_inv = get_all_staff_list_inv(get_all_staff_list())
+    all_staff = get_all_staff_list()  # {'Милана': 4052346, ...}
     staff_id_list = []
-    for key in all_staff_id_list_inv:
-        available_for_staff = get_available_dates_for_staff_service(key, service_id)
-        available_for_staff = available_for_staff['data'].get('booking_dates')
-        if date in available_for_staff:
-            staff_id_list.append(key)
+    for staff_name, staff_id in all_staff.items():
+        try:
+            available_for_staff = get_available_dates_for_staff_service(staff_id, service_id)
+            # available_for_staff — список дат или None
+            if isinstance(available_for_staff, list) and date in available_for_staff:
+                staff_id_list.append(staff_id)
+        except Exception as e:
+            print(f"Ошибка получения дат для {staff_name}: {e}")
     return staff_id_list
 
 def get_staff_for_date_time_service(service_id, date, time):
@@ -638,16 +641,19 @@ def webhook():
                                     result = "Нет доступных мастеров для этой услуги."
                             else:
                                 result = "Не удалось получить информацию по мастерам для этой услуги."
-                        elif fn_name == "get_staff_for_date_service":
-                            raw = get_staff_for_date_service(args.get("service_id"), args.get("date"))
-                            # Попробуем извлечь имена из id
-                            if isinstance(raw, list) and raw:
-                                all_staff = get_all_staff_list_inv(get_all_staff_list())
-                                staff_names = [all_staff.get(staff_id, f"ID {staff_id}") for staff_id in raw]
-                                if staff_names:
-                                    result = "В этот день доступны мастера:\n" + "\n".join(f"{i+1}. {name}" for i, name in enumerate(staff_names))
+                           elif fn_name == "get_staff_for_date_service":
+                               raw = get_staff_for_date_service(args.get("service_id"), args.get("date"))
+                                if isinstance(raw, list) and raw:
+                                    # Получаем маппинг id → имя
+                                    all_staff_names = get_all_staff_list_inv(get_all_staff_list())
+                                    staff_names = [all_staff_names.get(staff_id, f"ID {staff_id}") for staff_id in raw]
+                                    if staff_names:
+                                        result = "В этот день доступны мастера:\n" + "\n".join(f"{i+1}. {name}" for i, name in enumerate(staff_names))
+                                    else:
+                                        result = "На эту дату нет доступных мастеров."
                                 else:
-                                    result = "На эту дату нет доступных мастеров."
+                                    result = "Не удалось получить информацию по мастерам."
+
                             elif isinstance(raw, dict) and raw.get('success') and 'data' in raw:
                                 staff_names = [entry['name'] for entry in raw['data']]
                                 if staff_names:
