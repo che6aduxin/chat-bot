@@ -725,7 +725,6 @@ def webhook():
 
 
 
-      
 
         else:
             print("⚠️ GPT не вызвал функцию — fallback в чистый диалог.")
