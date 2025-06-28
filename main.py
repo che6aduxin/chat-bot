@@ -24,16 +24,32 @@ def get_all_staff_list_inv(all_staff_list):
     all_staff_list_inv = {value: key for key, value in all_staff_list}
     return all_staff_list_inv
 
-def get_all_services_list():
+def get_all_services_list(filter_str=None, max_results=15):
+    """
+    Возвращает словарь услуг: {название: id}.
+    Если задан filter_str, то фильтрует услуги по названию.
+    По умолчанию ограничивает результат 15 позициями.
+    """
     services = api.get_services()
-    print(services)
-    all_services_list = {}
     services_data = services['data']
+    all_services_list = {}
+
+    count = 0
     for elem in services_data['services']:
-        service_title = elem.get('title')
+        title = elem.get('title')
         service_id = elem.get('id')
-        all_services_list.update({service_title: service_id})
-        print(service_title, service_id)
+        # Если фильтр задан — возвращаем только совпадения
+        if filter_str:
+            if filter_str.lower() in title.lower():
+                all_services_list[title] = service_id
+                count += 1
+        else:
+            all_services_list[title] = service_id
+            count += 1
+        # Ограничение на количество возвращаемых услуг
+        if count >= max_results:
+            break
+
     return all_services_list
 
 def get_all_services_list_inv(all_services_list):
@@ -262,19 +278,27 @@ tools = [
         }
     },
     {
-        "type": "function",
-        "function": {
-            "name": "get_all_services_list",
-            "description": (
-                "Возвращает словарь со всеми услугами, где ключами являются названия услуг, а значаниями являются их id"
-            ),
-            "parameters": {
-                "type": "object",
-                "properties": {},
-                "required": []
+    "type": "function",
+    "function": {
+        "name": "get_all_services_list",
+        "description": (
+            "Возвращает словарь с услугами, где ключ — название услуги, значение — id услуги. "
+            "Можно фильтровать услуги по названию с помощью параметра filter_str (например, 'чистка', 'спина'). "
+            "Если filter_str не указан, возвращает не более 15 любых услуг для избежания спама."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "filter_str": {
+                    "type": "string",
+                    "description": "Фильтр по названию услуги (например, 'спина', 'чистка'). Можно не указывать."
+                }
+            },
+            "required": []
             }
         }
     },
+
     {
         "type": "function",
         "function": {
