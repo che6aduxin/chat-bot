@@ -515,7 +515,7 @@ def webhook():
             temperature=0.1
         )
 
-        choice = response.choices[0].message.tool_calls[0]
+        choice = response.choices[0].message
         print("\n--- ОТВЕТ OPENAI ---\n", choice, "\n----------------------\n")
 
         tool_calls = getattr(choice, "tool_calls", None)
