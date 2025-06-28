@@ -541,7 +541,7 @@ def webhook():
         choice = response.choices[0].message
         print("\n--- ОТВЕТ OPENAI ---\n", choice, "\n----------------------\n")
 
-        tool_calls = getattr(choice, "tool_calls", None)
+                tool_calls = getattr(choice, "tool_calls", None)
         if tool_calls:
             for tool_call in tool_calls:
                 fn_name = tool_call.function.name
@@ -581,20 +581,11 @@ def webhook():
                     elif fn_name == "get_all_staff_list_inv":
                         result = get_all_staff_list_inv(get_all_staff_list())
                     elif fn_name == "get_all_services_list":
+                        # Новый вариант: фильтр и лимит всегда активен!
                         filter_str = args.get("filter_str")
-                        if filter_str:
-                            services = get_all_services_list(filter_str=filter_str)
-                                if not services:
-                                    result = f"Не найдено услуг, содержащих '{filter_str}'. Попробуйте другой запрос."
-                                else:
-                                    # Список максимум из 15 (или меньше) названий:
-                                      items = "\n".join([f"• {k}" for k in services.keys()])
-                                        result = f"Найдено {len(services)} услуг(и) по фильтру '{filter_str}':\n{items}"
-                        else:
-                            # Не позволяем ассистенту спамить всеми услугами:
-                        result = ("Для удобства поиска укажите часть названия услуги, например: 'чистка', 'спина', 'лазер'. "
-                          "Я покажу только те услуги, которые соответствуют вашему запросу.")
-
+                        result = get_all_services_list(filter_str=filter_str)
+                        if not result:
+                            result = "❗️Не найдено ни одной услуги по вашему запросу. Попробуйте уточнить название."
                     elif fn_name == "get_all_services_list_inv":
                         result = get_all_services_list_inv(get_all_services_list())
                     elif fn_name == "get_services_title_list_for_staff":
@@ -628,19 +619,12 @@ def webhook():
                 # Supply model with result (обратный вызов GPT)
                 tool_call_id = tool_call.id
                 messages_for_gpt = gpt_messages + [
-                {
-                "role": "tool",
-                "tool_call_id": tool_call_id,
-                "content": json.dumps(result, ensure_ascii=False)
-                }
+                    {
+                        "role": "tool",
+                        "tool_call_id": tool_call_id,
+                        "content": json.dumps(result, ensure_ascii=False)
+                    }
                 ]
-                # messages_for_gpt = gpt_messages
-                # messages_for_gpt.append(tool_call)
-                # messages_for_gpt.append({
-                #     "type": "function_call_output",
-                #     "call_id": tool_call.call_id,
-                #     "output": str(result)
-                # })
                 response2 = client.chat.completions.create(
                     model="gpt-4o",
                     messages=messages_for_gpt,
@@ -651,6 +635,7 @@ def webhook():
                 final_answer = response2.choices[0].message.content
                 send_message(phone, final_answer)
                 add_memory(phone, "assistant", final_answer)
+
 
             return "OK", 200
 
