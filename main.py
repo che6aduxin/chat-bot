@@ -592,88 +592,111 @@ def webhook():
                 })
 
                 # 2. Добавляем tool-ответы по каждой функции
-                for tool_call in tool_calls:
-                    fn_name = tool_call.function.name
-                    args = json.loads(tool_call.function.arguments)
-                    print("Function call:", fn_name, "| Args:", args)
+        for tool_call in tool_calls:
+            fn_name = tool_call.function.name
+            args = json.loads(tool_call.function.arguments)
+            print("Function call:", fn_name, "| Args:", args)
 
-                    # --- НОРМАЛИЗАЦИЯ ДАТЫ ---
-                    if "date" in args:
-                        args["date"] = normalize_date(args["date"])
+            # --- НОРМАЛИЗАЦИЯ ДАТЫ ---
+            if "date" in args:
+                args["date"] = normalize_date(args["date"])
 
-                    # --- Универсальный обработчик функций ---
-                    result = None
-                    try:
-                        if fn_name == "book_service":
-                            all_services = get_all_services_list()
-                            all_staff = get_all_staff_list()
-                            service_id = all_services.get(args['service'])
-                            staff_id = all_staff.get(args['master'])
-                            date = args['date']
-                            time = args['time']
-                            date_time = f"{date} {time}"
-                            if not service_id:
-                                result = f"❗️Услуга '{args['service']}' не найдена. Доступные: {', '.join(all_services.keys())}"
-                            elif not staff_id:
-                                result = f"❗️Мастер '{args['master']}' не найден. Доступные: {', '.join(all_staff.keys())}"
-                            else:
-                                try:
-                                    book(
-                                        name=args['master'],
-                                        phone=phone,
-                                        service_id=service_id,
-                                        date_time=date_time,
-                                        staff_id=staff_id,
-                                        comment="Запись через WhatsApp"
-                                    )
-                                    result = f"✅ Вы успешно записаны на {args['service']} к мастеру {args['master']} {date} в {time}! Ждём вас в салоне."
-                                except Exception as e:
-                                    result = f"Ошибка при записи: {e}"
-                        elif fn_name == "get_all_staff_list":
-                            result = get_all_staff_list()
-                        elif fn_name == "get_all_staff_list_inv":
-                            result = get_all_staff_list_inv(get_all_staff_list())
-                        elif fn_name == "get_all_services_list":
-                            filter_str = args.get("filter_str")
-                            result = get_all_services_list(filter_str=filter_str)
-                            if not result:
-                                result = "❗️Не найдено ни одной услуги по вашему запросу. Попробуйте уточнить название."
-                        elif fn_name == "get_all_services_list_inv":
-                            result = get_all_services_list_inv(get_all_services_list())
-                        elif fn_name == "get_services_title_list_for_staff":
-                            result = get_services_title_list_for_staff(args.get("staff_id"))
-                        elif fn_name == "get_service_info":
-                            result = get_service_info(args.get("service_id"))
-                        elif fn_name == "get_available_dates_for_staff_service":
-                            result = get_available_dates_for_staff_service(args.get("staff_id"), args.get("service_id"))
-                        elif fn_name == "get_available_dates_for_service":
-                            result = get_available_dates_for_service(args.get("service_id"))
-                        elif fn_name == "get_staff_for_date_service":
-                            result = get_staff_for_date_service(args.get("service_id"), args.get("date"))
-                        elif fn_name == "get_staff_for_date_time_service":
-                            result = get_staff_for_date_time_service(args.get("service_id"), args.get("date"), args.get("time"))
-                        elif fn_name == "get_available_times_for_staff_service":
-                            result = get_available_times_for_staff_service(args.get("staff_id"), args.get("service_id"), args.get("date"))
-                        elif fn_name == "get_available_times_for_service":
-                            result = get_available_times_for_service(args.get("service_id"), args.get("date"))
-                        elif fn_name == "book":
-                            book(args.get("name"), args.get("phone", phone), args.get("service_id"), args.get("date_time"),
-                                 args.get("staff_id"), args.get("comment", "Запись через WhatsApp"))
-                            result = f"✅ Вы успешно записаны на услугу {args.get('service_id')} к мастеру {args.get('staff_id')} на {args.get('date_time')}!"
-                        elif fn_name == "get_knowledge_base":
-                            kb = get_knowledge_base()
-                            result = "\n".join([f"{item['term']}: {item['explanation']}" for item in kb])
+            result = None
+            try:
+                if fn_name == "book_service":
+                    all_services = get_all_services_list()
+                    all_staff = get_all_staff_list()
+                    service_id = all_services.get(args['service'])
+                    staff_id = all_staff.get(args['master'])
+                    date = args['date']
+                    time = args['time']
+                    date_time = f"{date} {time}"
+                    if not service_id:
+                        result = f"❗️Услуга '{args['service']}' не найдена. Доступные: {', '.join(all_services.keys())}"
+                    elif not staff_id:
+                        result = f"❗️Мастер '{args['master']}' не найден. Доступные: {', '.join(all_staff.keys())}"
+                    else:
+                        try:
+                            book(
+                                name=args['master'],
+                                phone=phone,
+                                service_id=service_id,
+                                date_time=date_time,
+                                staff_id=staff_id,
+                                comment="Запись через WhatsApp"
+                            )
+                            result = f"✅ Вы успешно записаны на {args['service']} к мастеру {args['master']} {date} в {time}! Ждём вас в салоне."
+                        except Exception as e:
+                            result = f"Ошибка при записи: {e}"
+                elif fn_name == "get_staff_for_date_service":
+                    raw = get_staff_for_date_service(args.get("service_id"), args.get("date"))
+                    # Попробуем извлечь имена из id
+                    if isinstance(raw, list) and raw and isinstance(raw[0], int):
+                        all_staff = get_all_staff_list_inv(get_all_staff_list())
+                        staff_names = [all_staff.get(staff_id, f"ID {staff_id}") for staff_id in raw]
+                        if staff_names:
+                            result = "В этот день доступны мастера:\n" + "\n".join(f"{i+1}. {name}" for i, name in enumerate(staff_names))
                         else:
-                            result = "Функция не реализована или параметры не распознаны."
-                    except Exception as e:
-                        result = f"Ошибка при вызове функции: {e}"
+                            result = "На эту дату нет доступных мастеров."
+                    elif isinstance(raw, dict) and raw.get('success') and 'data' in raw:
+                        staff_names = [entry['name'] for entry in raw['data']]
+                        if staff_names:
+                            result = "В этот день доступны мастера:\n" + "\n".join(f"{i+1}. {name}" for i, name in enumerate(staff_names))
+                        else:
+                            result = "На эту дату нет доступных мастеров."
+                    else:
+                        result = "Не удалось получить информацию по мастерам."
+                elif fn_name == "get_available_times_for_staff_service":
+                    raw = get_available_times_for_staff_service(args.get("staff_id"), args.get("service_id"), args.get("date"))
+                    if isinstance(raw, list):
+                        if raw:
+                            result = "Доступные времена записи:\n" + "\n".join(raw)
+                        else:
+                            result = "Нет доступных времён на эту дату."
+                    else:
+                        result = "Не удалось получить времена записи."
+                # ---- остальные функции без изменений, либо аналогичная обработка ----
+                elif fn_name == "get_all_staff_list":
+                    result = get_all_staff_list()
+                elif fn_name == "get_all_staff_list_inv":
+                    result = get_all_staff_list_inv(get_all_staff_list())
+                elif fn_name == "get_all_services_list":
+                    filter_str = args.get("filter_str")
+                    result = get_all_services_list(filter_str=filter_str)
+                    if not result:
+                        result = "❗️Не найдено ни одной услуги по вашему запросу. Попробуйте уточнить название."
+                elif fn_name == "get_all_services_list_inv":
+                    result = get_all_services_list_inv(get_all_services_list())
+                elif fn_name == "get_services_title_list_for_staff":
+                    result = get_services_title_list_for_staff(args.get("staff_id"))
+                elif fn_name == "get_service_info":
+                    result = get_service_info(args.get("service_id"))
+                elif fn_name == "get_available_dates_for_staff_service":
+                    result = get_available_dates_for_staff_service(args.get("staff_id"), args.get("service_id"))
+                elif fn_name == "get_available_dates_for_service":
+                    result = get_available_dates_for_service(args.get("service_id"))
+                elif fn_name == "get_staff_for_date_time_service":
+                    result = get_staff_for_date_time_service(args.get("service_id"), args.get("date"), args.get("time"))
+                elif fn_name == "get_available_times_for_service":
+                    result = get_available_times_for_service(args.get("service_id"), args.get("date"))
+                elif fn_name == "book":
+                    book(args.get("name"), args.get("phone", phone), args.get("service_id"), args.get("date_time"),
+                         args.get("staff_id"), args.get("comment", "Запись через WhatsApp"))
+                    result = f"✅ Вы успешно записаны на услугу {args.get('service_id')} к мастеру {args.get('staff_id')} на {args.get('date_time')}!"
+                elif fn_name == "get_knowledge_base":
+                    kb = get_knowledge_base()
+                    result = "\n".join([f"{item['term']}: {item['explanation']}" for item in kb])
+                else:
+                    result = "Функция не реализована или параметры не распознаны."
+            except Exception as e:
+                result = f"Ошибка при вызове функции: {e}"
 
-                    # Добавляем tool-ответ (только после assistant!)
-                    gpt_messages.append({
-                        "role": "tool",
-                        "tool_call_id": tool_call.id,
-                        "content": json.dumps(result, ensure_ascii=False)
-                    })
+            gpt_messages.append({
+                "role": "tool",
+                "tool_call_id": tool_call.id,
+                "content": json.dumps(result, ensure_ascii=False)
+            })
+
 
                 # 3. Новый запрос к GPT (вся supply-chain)
                 response2 = client.chat.completions.create(
