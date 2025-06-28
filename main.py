@@ -581,7 +581,6 @@ def webhook():
                     elif fn_name == "get_all_staff_list_inv":
                         result = get_all_staff_list_inv(get_all_staff_list())
                     elif fn_name == "get_all_services_list":
-                        # Новый вариант: фильтр и лимит всегда активен!
                         filter_str = args.get("filter_str")
                         result = get_all_services_list(filter_str=filter_str)
                         if not result:
@@ -616,15 +615,28 @@ def webhook():
                 except Exception as e:
                     result = f"Ошибка при вызове функции: {e}"
 
-                # Supply model with result (обратный вызов GPT)
-                tool_call_id = tool_call.id
-                messages_for_gpt = gpt_messages + [
-                    {
-                        "role": "tool",
-                        "tool_call_id": tool_call_id,
-                        "content": json.dumps(result, ensure_ascii=False)
-                    }
-                ]
+                # ----------- ЭТА ЧАСТЬ ОБЯЗАТЕЛЬНО ОБНОВЛЯЕТСЯ -----------
+                assistant_message = {
+                    "role": "assistant",
+                    "content": None,
+                    "tool_calls": [
+                        {
+                            "id": tool_call.id,
+                            "type": "function",
+                            "function": {
+                                "name": fn_name,
+                                "arguments": json.dumps(args, ensure_ascii=False)
+                            }
+                        }
+                    ]
+                }
+                tool_message = {
+                    "role": "tool",
+                    "tool_call_id": tool_call.id,
+                    "content": json.dumps(result, ensure_ascii=False)
+                }
+                messages_for_gpt = gpt_messages + [assistant_message, tool_message]
+
                 response2 = client.chat.completions.create(
                     model="gpt-4o",
                     messages=messages_for_gpt,
@@ -636,8 +648,9 @@ def webhook():
                 send_message(phone, final_answer)
                 add_memory(phone, "assistant", final_answer)
 
-
             return "OK", 200
+
+      
 
         else:
             print("⚠️ GPT не вызвал функцию — fallback в чистый диалог.")
