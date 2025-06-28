@@ -2,6 +2,7 @@ import os
 import yclients
 import httpx
 import ujson
+import datetime
 from yclients import YClientsAPI
 
 YCLIENTS_API_TOKEN = os.getenv("YCLIENTS_API_TOKEN")
@@ -19,7 +20,34 @@ def get_all_staff_list():
         all_staff_list.update({staff_name: staff_id})
         print(staff_name, staff_id)
     return all_staff_list
+def get_next_weekday(target_weekday):
+    # target_weekday: 0=Monday ... 6=Sunday
+    today = datetime.date.today()
+    days_ahead = target_weekday - today.weekday()
+    if days_ahead <= 0:
+        days_ahead += 7
+    return (today + datetime.timedelta(days=days_ahead)).strftime("%Y-%m-%d")
 
+def normalize_date(date_str):
+    # ISO-дату из будущего — возвращаем
+    try:
+        dt = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
+        if dt >= datetime.date.today():
+            return date_str
+    except Exception:
+        pass
+    # Обрабатываем русские и английские дни недели
+    weekdays_map = {
+        "понедельник": 0, "вторник": 1, "среда": 2, "четверг": 3,
+        "пятница": 4, "суббота": 5, "воскресенье": 6,
+        "monday": 0, "tuesday": 1, "wednesday": 2, "thursday": 3,
+        "friday": 4, "saturday": 5, "sunday": 6,
+    }
+    low = date_str.strip().lower()
+    if low in weekdays_map:
+        return get_next_weekday(weekdays_map[low])
+    # Если ничего не подошло — сегодняшняя дата
+    return datetime.date.today().strftime("%Y-%m-%d")
 def get_all_staff_list_inv(all_staff_list):
     all_staff_list_inv = {value: key for key, value in all_staff_list}
     return all_staff_list_inv
@@ -569,6 +597,10 @@ def webhook():
                     args = json.loads(tool_call.function.arguments)
                     print("Function call:", fn_name, "| Args:", args)
 
+                    # --- НОРМАЛИЗАЦИЯ ДАТЫ ---
+                    if "date" in args:
+                        args["date"] = normalize_date(args["date"])
+
                     # --- Универсальный обработчик функций ---
                     result = None
                     try:
@@ -659,6 +691,7 @@ def webhook():
                 send_message(phone, final_answer)
                 add_memory(phone, "assistant", final_answer)
                 return "OK", 200
+
 
 
 
