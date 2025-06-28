@@ -628,10 +628,20 @@ def webhook():
                                     result = f"✅ Вы успешно записаны на {args['service']} к мастеру {args['master']} {date} в {time}! Ждём вас в салоне."
                                 except Exception as e:
                                     result = f"Ошибка при записи: {e}"
+                        elif fn_name == "get_staff_for_service":
+                            raw = get_staff_for_service(args.get("service_id"))
+                            if isinstance(raw, dict) and raw:
+                                names = list(raw.keys())
+                                if names:
+                                    result = "Эту услугу выполняют:\n" + "\n".join(f"{i+1}. {name}" for i, name in enumerate(names))
+                                else:
+                                    result = "Нет доступных мастеров для этой услуги."
+                            else:
+                                result = "Не удалось получить информацию по мастерам для этой услуги."
                         elif fn_name == "get_staff_for_date_service":
                             raw = get_staff_for_date_service(args.get("service_id"), args.get("date"))
                             # Попробуем извлечь имена из id
-                            if isinstance(raw, list) and raw and isinstance(raw[0], int):
+                            if isinstance(raw, list) and raw:
                                 all_staff = get_all_staff_list_inv(get_all_staff_list())
                                 staff_names = [all_staff.get(staff_id, f"ID {staff_id}") for staff_id in raw]
                                 if staff_names:
@@ -713,6 +723,7 @@ def webhook():
                 send_message(phone, final_answer)
                 add_memory(phone, "assistant", final_answer)
                 return "OK", 200
+
 
 
 
