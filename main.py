@@ -22,7 +22,6 @@ def get_service_categories():
     return resp.json()
 
 
-
 def get_all_staff_list():
     all_staff = api.get_staff()
     print(all_staff)
