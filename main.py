@@ -542,12 +542,6 @@ def send_message(phone, text):
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
-    # ... твой код выше ...
-    if message.strip().lower() == "категории":
-        categories = get_service_categories()
-        send_message(phone, f"Категории: {categories}")
-        return "OK", 200
-    # ... остальной код ...
     try:
         data = request.get_json()
         print("Webhook:", data)
