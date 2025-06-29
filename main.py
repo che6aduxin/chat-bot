@@ -59,6 +59,8 @@ def get_all_services_list(filter_str=None, max_results=15):
     По умолчанию ограничивает результат 15 позициями.
     """
     services = api.get_services()
+    import pprint
+    pprint.pprint(services) # Посмотрим, что реально отдает YClients
     services_data = services['data']
     all_services_list = {}
 
