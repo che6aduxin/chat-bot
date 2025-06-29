@@ -10,6 +10,17 @@ YCLIENTS_COMPANY_ID = os.getenv("YCLIENTS_COMPANY_ID")
 YCLIENTS_FORM_ID = os.getenv("YCLIENTS_APPLICATION_ID")
 api = YClientsAPI(token=YCLIENTS_API_TOKEN, company_id=YCLIENTS_COMPANY_ID, form_id=YCLIENTS_FORM_ID)
 
+# --- ПРОВЕРКА КАТЕГОРИЙ ---
+if hasattr(api, "get_service_categories"):
+    cats = api.get_service_categories()
+    print("Категории:", cats)
+elif hasattr(api, "get_categories"):
+    cats = api.get_categories()
+    print("Категории:", cats)
+else:
+    print("Метод получения категорий в api не найден!")
+    
+
 def get_all_staff_list():
     all_staff = api.get_staff()
     print(all_staff)
@@ -60,12 +71,6 @@ def get_all_services_list(filter_str=None, max_results=15):
     """
     services = api.get_services()
     services_data = services['data']
-
-    # Тестовый вывод по всем услугам!
-    for elem in services_data['services']:
-        print("УСЛУГА:", elem)
-        if 'category' in elem:
-            print("CATEGORY ВНУТРИ УСЛУГИ:", elem['category'])
             
     all_services_list = {}
     
