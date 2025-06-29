@@ -10,9 +10,17 @@ YCLIENTS_COMPANY_ID = os.getenv("YCLIENTS_COMPANY_ID")
 YCLIENTS_FORM_ID = os.getenv("YCLIENTS_APPLICATION_ID")
 api = YClientsAPI(token=YCLIENTS_API_TOKEN, company_id=YCLIENTS_COMPANY_ID, form_id=YCLIENTS_FORM_ID)
 
-# --- ОТЛАДКА: посмотреть методы api ---
-print(dir(api))
-help(api)
+def get_service_categories():
+    url = "https://yclients.com/api/v1/company/606554/service_categories?include=services_count"
+    headers = {
+        'Content-Type': 'application/json',
+        'User-Token': os.getenv("YCLIENTS_API_TOKEN"),  # или Authorization...
+        'Company-Id': '606554',
+    }
+    resp = requests.get(url, headers=headers)
+    print("Категории:", resp.json())
+    return resp.json()
+
 
 
 def get_all_staff_list():
