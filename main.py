@@ -100,8 +100,7 @@ def get_all_services_list(filter_str=None, max_results=15):
     return all_services_list
 
 def get_all_services_list_inv(all_services_list):
-    all_services_list_inv = {value: key for key, value in all_services_list}
-    return all_services_list_inv
+    return {v: k for k, v in all_services_list.items()}
 
 def get_services_title_list_for_staff(staff_id):
     services = api.get_services(staff_id=staff_id)
@@ -171,30 +170,40 @@ def get_staff_for_date_time_service(service_id, date, time):
 def get_available_times_for_staff_service(staff_id, service_id, date):
     time_slots = api.get_available_times(staff_id=staff_id, service_id=service_id, day=date)
     print(time_slots)
-    available_time = [time_slots['data'].get('time') for elem in time_slots['data']]
+    slots = time_slots['data']
+    # slots = [{'time': '12:00'}, ...]
+    available_time = [elem['time'] for elem in slots if 'time' in elem]
     return available_time
 
 def get_available_times_for_service(service_id, date):
     staff = get_staff_for_date_service(service_id, date)
     available_times = []
-    for elem in staff:
-        time_slots = api.get_available_times(staff_id=elem, service_id=service_id, day=date)
-        times = [time_slots['data'].get('time') for elem in time_slots['data']]
-        for _ in times:
-            if _ not in available_times:
-                available_times.append(_)
+    for staff_id in staff:
+        time_slots = api.get_available_times(staff_id=staff_id, service_id=service_id, day=date)
+        times = [elem['time'] for elem in time_slots['data'] if 'time' in elem]
+        for t in times:
+            if t not in available_times:
+                available_times.append(t)
     return available_times
 
 def book(name, phone, service_id, date_time, staff_id, comment):
-    api.book(booking_id=0,
-             fullname=name,
-             phone=phone,
-             email="noemail@noemail.com",
-             service_id=service_id,
-             date_time=date_time,
-             staff_id=staff_id,
-             comment=comment)
+    # Преобразуем дату-время в ISO, если не приходит уже готовым
+    # Предполагаем, что date_time = 'YYYY-MM-DD HH:MM'
+    if "T" not in date_time:
+        dt = datetime.datetime.strptime(date_time, "%Y-%m-%d %H:%M")
+        date_time = dt.strftime("%Y-%m-%dT%H:%M:00+03:00")
+    api.book(
+        booking_id=0,
+        fullname=name,
+        phone=phone,
+        email="noemail@noemail.com",
+        service_id=service_id,
+        date_time=date_time,
+        staff_id=staff_id,
+        comment=comment
+    )
     print('booked')
+
 
 # --- Flask + OpenAI function calling ---
 
@@ -633,7 +642,7 @@ def webhook():
                             else:
                                 try:
                                     book(
-                                        name=args['master'],
+                                        name=history[-1]['content'] if history else "Клиент WhatsApp",
                                         phone=phone,
                                         service_id=service_id,
                                         date_time=date_time,
