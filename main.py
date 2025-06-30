@@ -8,6 +8,16 @@ from yclients import YClientsAPI
 import openai
 from flask import Flask, request
 import json
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("bot.log"),
+        logging.StreamHandler()
+    ]
+)
 
 
 
@@ -155,7 +165,7 @@ def get_staff_for_date_service(service_id, date):
             if isinstance(available_for_staff, list) and date in available_for_staff:
                 staff_id_list.append(staff_id)
         except Exception as e:
-            print(f"Ошибка получения дат для {staff_name}: {e}")
+            logging.error(f"Ошибка получения дат для {staff_name}: {e}")
     return staff_id_list
 
 def get_staff_for_date_time_service(service_id, date, time):
@@ -546,13 +556,13 @@ def send_message(phone, text):
         "message": text
     }
     response = requests.post(url, json=payload)
-    print(f"Green API ответ: {response.status_code} - {response.text}")
+    logging.info(f"Green API ответ: {response.status_code} - {response.text}")
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
     try:
         data = request.get_json()
-        print("Webhook:", data)
+        logging.info(f"Webhook: {data}")
 
         if data.get("typeWebhook") != "incomingMessageReceived":
             return "Ignored", 200
@@ -569,7 +579,7 @@ def webhook():
             print("Неизвестный тип сообщения!")
 
         phone = data['senderData']['chatId'].replace("@c.us", "")
-        print(f"Входящее сообщение: '{message}' от {phone}")
+        logging.info(f"Входящее сообщение: '{message}' от {phone}")
 
         # --- Долговременная память (GAS) ---
         history = get_memory(phone)
@@ -591,7 +601,7 @@ def webhook():
         )
 
         choice = response.choices[0].message
-        print("\n--- ОТВЕТ OPENAI ---\n", choice, "\n----------------------\n")
+        logging.info(f"--- ОТВЕТ OPENAI ---\n{choice}\n----------------------")
 
                 # --- Supply-loop: обработка цепочки tool_calls ---
                 # --- Supply-loop: обработка цепочки tool_calls ---
@@ -619,7 +629,7 @@ def webhook():
                 for tool_call in tool_calls:
                     fn_name = tool_call.function.name
                     args = json.loads(tool_call.function.arguments)
-                    print("Function call:", fn_name, "| Args:", args)
+                    logging.info(f"Function call: {fn_name} | Args: {args}")
 
                     # --- НОРМАЛИЗАЦИЯ ДАТЫ ---
                     if "date" in args:
@@ -650,6 +660,7 @@ def webhook():
                                         comment="Запись через WhatsApp"
                                     )
                                     result = f"✅ Вы успешно записаны на {args['service']} к мастеру {args['master']} {date} в {time}! Ждём вас в салоне."
+                                    logging.info(f"Успешная запись: клиент={name}, phone={phone}, service_id={service_id}, staff_id={staff_id}, date_time={date_time}")
                                 except Exception as e:
                                     result = f"Ошибка при записи: {e}"
                         elif fn_name == "get_staff_for_service":
@@ -748,7 +759,7 @@ def webhook():
             return "OK", 200
 
     except Exception as e:
-        print("Ошибка в webhook:", e)
+        logging.exception("Ошибка в webhook:")
         send_message(phone, "Произошла ошибка на сервере, попробуйте позже.")
         return "OK", 200
 
