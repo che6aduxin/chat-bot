@@ -1,9 +1,14 @@
 import os
+import requests
 import yclients
 import httpx
 import ujson
 import datetime
 from yclients import YClientsAPI
+import openai
+from flask import Flask, request
+import json
+
 
 
 YCLIENTS_API_TOKEN = os.getenv("YCLIENTS_API_TOKEN")
@@ -195,10 +200,7 @@ def book(name, phone, service_id, date_time, staff_id, comment):
 
 # --- Flask + OpenAI function calling ---
 
-import requests
-import openai
-from flask import Flask, request
-import json
+
 
 # --- Google Apps Script API для работы с памятью и промтами ---
 GAS_API_URL = "https://script.google.com/macros/s/AKfycbxL2dDQWi88cURqq_OFJYLd56JKEuZjLJW41aYqguzedchA1jprv8zpm6Tvk-8eyZdI/exec"
@@ -253,10 +255,6 @@ def generate_gpt_response(history, user_message, system_prompt):
     )
     return response.choices[0].message.content
 
-import requests
-import openai
-from flask import Flask, request
-import json
 
 # Если используешь переменные окружения для ключей, можешь так:
 # GREEN_API_ID = os.getenv("GREEN_API_ID")
@@ -733,13 +731,6 @@ def webhook():
                 send_message(phone, final_answer)
                 add_memory(phone, "assistant", final_answer)
                 return "OK", 200
-
-
-
-
-
-
-
         else:
             print("⚠️ GPT не вызвал функцию — fallback в чистый диалог.")
             fallback_response = generate_gpt_response(history, message, system_prompt)
