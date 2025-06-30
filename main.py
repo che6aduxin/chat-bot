@@ -758,4 +758,13 @@ def webhook():
 def home():
     return "Бот работает!", 200
 
+if __name__ == "__main__":
+    print(">>> Flask is starting!")
+    print("YCLIENTS_API_TOKEN:", YCLIENTS_API_TOKEN)
+    print("YCLIENTS_COMPANY_ID:", YCLIENTS_COMPANY_ID)
+    print("YCLIENTS_FORM_ID:", YCLIENTS_FORM_ID)
+    print("OPENAI_API_TOKEN:", OPENAI_API_TOKEN)
+    print("GREEN_API_ID:", GREEN_API_ID)
+    print("GREEN_API_TOKEN:", GREEN_API_TOKEN)
     app.run(host="0.0.0.0", port=8000)
+
