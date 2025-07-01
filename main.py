@@ -651,8 +651,9 @@ def webhook():
                                 result = f"❗️Мастер '{args['master']}' не найден. Доступные: {', '.join(all_staff.keys())}"
                             else:
                                 try:
+                                    name=history[-1]['content'] if history else "Клиент WhatsApp"
                                     book(
-                                        name=history[-1]['content'] if history else "Клиент WhatsApp",
+                                        name=name,
                                         phone=phone,
                                         service_id=service_id,
                                         date_time=date_time,
