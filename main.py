@@ -236,8 +236,12 @@ def get_knowledge_base():
 
 def get_memory(user_id):
     resp = requests.get(GAS_API_URL, params={"type": "memory", "userId": str(user_id)})
-    resp.raise_for_status()
-    return resp.json()
+    try:
+        return resp.json()
+    except Exception as e:
+        logging.error(f"GAS get_memory не вернул JSON! Статус: {resp.status_code}, Ответ: {resp.text}")
+        # Можно вернуть пустую историю — чтобы бот не падал
+        return []
 
 def add_memory(user_id, role, content):
     payload = {
