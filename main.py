@@ -20,11 +20,12 @@ logging.basicConfig(
 )
 
 
-
 YCLIENTS_API_TOKEN = os.getenv("YCLIENTS_API_TOKEN")
 YCLIENTS_COMPANY_ID = os.getenv("YCLIENTS_COMPANY_ID")
 YCLIENTS_FORM_ID = os.getenv("YCLIENTS_APPLICATION_ID")
+assert all((YCLIENTS_API_TOKEN, YCLIENTS_COMPANY_ID, YCLIENTS_FORM_ID)) == True, "Can't find env var"
 api = YClientsAPI(token=YCLIENTS_API_TOKEN, company_id=YCLIENTS_COMPANY_ID, form_id=YCLIENTS_FORM_ID)
+
 
 def get_service_categories():
     url = "https://yclients.com/api/v1/company/606554/service_categories?include=services_count"
@@ -48,6 +49,8 @@ def get_all_staff_list():
         all_staff_list.update({staff_name: staff_id})
         print(staff_name, staff_id)
     return all_staff_list
+
+
 def get_next_weekday(target_weekday):
     # target_weekday: 0=Monday ... 6=Sunday
     today = datetime.date.today()
@@ -55,6 +58,7 @@ def get_next_weekday(target_weekday):
     if days_ahead <= 0:
         days_ahead += 7
     return (today + datetime.timedelta(days=days_ahead)).strftime("%Y-%m-%d")
+
 
 def normalize_date(date_str):
     # ISO-дату из будущего — возвращаем
@@ -76,9 +80,12 @@ def normalize_date(date_str):
         return get_next_weekday(weekdays_map[low])
     # Если ничего не подошло — сегодняшняя дата
     return datetime.date.today().strftime("%Y-%m-%d")
+
+
 def get_all_staff_list_inv(all_staff_list):
     # Корректная инверсия: {имя: id} → {id: имя}
     return {v: k for k, v in all_staff_list.items()}
+
 
 def get_all_services_list(filter_str=None, max_results=15):
     """
@@ -88,9 +95,9 @@ def get_all_services_list(filter_str=None, max_results=15):
     """
     services = api.get_services()
     services_data = services['data']
-            
+
     all_services_list = {}
-    
+
     count = 0
     for elem in services_data['services']:
         title = elem.get('title')
@@ -109,8 +116,10 @@ def get_all_services_list(filter_str=None, max_results=15):
 
     return all_services_list
 
+
 def get_all_services_list_inv(all_services_list):
     return {v: k for k, v in all_services_list.items()}
+
 
 def get_services_title_list_for_staff(staff_id):
     services = api.get_services(staff_id=staff_id)
@@ -122,6 +131,7 @@ def get_services_title_list_for_staff(staff_id):
     print(services_title_list_for_staff)
     return services_title_list_for_staff
 
+
 def get_staff_for_service(service_id):
     staff_for_service_list = {}
     data = api.get_staff(service_id=service_id)
@@ -129,6 +139,7 @@ def get_staff_for_service(service_id):
     for elem in data:
         staff_for_service_list .update({elem.get('name'): elem.get('id')})
     return staff_for_service_list
+
 
 def get_service_info(service_id):
     info = api.get_service_info(service_id)
@@ -141,12 +152,15 @@ def get_service_info(service_id):
     service_info.append(duration)
     return service_info
 
+
 def get_available_dates_for_staff_service(staff_id, service_id):
-    available_dates = api.get_available_days(staff_id=staff_id, service_id=service_id)
+    available_dates = api.get_available_days(
+        staff_id=staff_id, service_id=service_id)
     print(available_dates)
     available_dates = available_dates['data'].get('booking_dates')
     print(available_dates)
     return available_dates
+
 
 def get_available_dates_for_service(service_id):
     available_dates = api.get_available_days(service_id=service_id)
@@ -155,12 +169,14 @@ def get_available_dates_for_service(service_id):
     print(available_dates)
     return available_dates
 
+
 def get_staff_for_date_service(service_id, date):
     all_staff = get_all_staff_list()  # {'Милана': 4052346, ...}
     staff_id_list = []
     for staff_name, staff_id in all_staff.items():
         try:
-            available_for_staff = get_available_dates_for_staff_service(staff_id, service_id)
+            available_for_staff = get_available_dates_for_staff_service(
+                staff_id, service_id)
             # available_for_staff — список дат или None
             if isinstance(available_for_staff, list) and date in available_for_staff:
                 staff_id_list.append(staff_id)
@@ -168,33 +184,40 @@ def get_staff_for_date_service(service_id, date):
             logging.error(f"Ошибка получения дат для {staff_name}: {e}")
     return staff_id_list
 
+
 def get_staff_for_date_time_service(service_id, date, time):
     all_staff_id_list_inv = get_all_staff_list_inv(get_all_staff_list())
     staff_id_list = []
     for key in all_staff_id_list_inv:
-        available_time_for_staff = get_available_times_for_staff_service(key, service_id, date)
+        available_time_for_staff = get_available_times_for_staff_service(
+            key, service_id, date)
         if time in available_time_for_staff:
             staff_id_list.append(key)
     return staff_id_list
 
+
 def get_available_times_for_staff_service(staff_id, service_id, date):
-    time_slots = api.get_available_times(staff_id=staff_id, service_id=service_id, day=date)
+    time_slots = api.get_available_times(
+        staff_id=staff_id, service_id=service_id, day=date)
     print(time_slots)
     slots = time_slots['data']
     # slots = [{'time': '12:00'}, ...]
     available_time = [elem['time'] for elem in slots if 'time' in elem]
     return available_time
 
+
 def get_available_times_for_service(service_id, date):
     staff = get_staff_for_date_service(service_id, date)
     available_times = []
     for staff_id in staff:
-        time_slots = api.get_available_times(staff_id=staff_id, service_id=service_id, day=date)
+        time_slots = api.get_available_times(
+            staff_id=staff_id, service_id=service_id, day=date)
         times = [elem['time'] for elem in time_slots['data'] if 'time' in elem]
         for t in times:
             if t not in available_times:
                 available_times.append(t)
     return available_times
+
 
 def book(name, phone, service_id, date_time, staff_id, comment):
     # Преобразуем дату-время в ISO, если не приходит уже готовым
@@ -220,28 +243,33 @@ def book(name, phone, service_id, date_time, staff_id, comment):
 # --- Flask + OpenAI function calling ---
 
 
-
 # --- Google Apps Script API для работы с памятью и промтами ---
 GAS_API_URL = "https://script.google.com/macros/s/AKfycbxL2dDQWi88cURqq_OFJYLd56JKEuZjLJW41aYqguzedchA1jprv8zpm6Tvk-8eyZdI/exec"
+
 
 def get_system_prompt():
     resp = requests.get(GAS_API_URL, params={"type": "prompt"})
     resp.raise_for_status()
     return resp.json()
 
+
 def get_knowledge_base():
     resp = requests.get(GAS_API_URL, params={"type": "knowledge"})
     resp.raise_for_status()
     return resp.json()
 
+
 def get_memory(user_id):
-    resp = requests.get(GAS_API_URL, params={"type": "memory", "userId": str(user_id)})
+    resp = requests.get(GAS_API_URL, params={
+                        "type": "memory", "userId": str(user_id)})
     try:
         return resp.json()
     except Exception as e:
-        logging.error(f"GAS get_memory не вернул JSON! Статус: {resp.status_code}, Ответ: {resp.text}")
+        logging.error(
+            f"GAS get_memory не вернул JSON! Статус: {resp.status_code}, Ответ: {resp.text}")
         # Можно вернуть пустую историю — чтобы бот не падал
         return []
+
 
 def add_memory(user_id, role, content):
     payload = {
@@ -254,6 +282,7 @@ def add_memory(user_id, role, content):
     resp.raise_for_status()
     return resp.json()
 
+
 def update_memory(user_id, memory_array):
     payload = {
         "action": "update",
@@ -263,6 +292,7 @@ def update_memory(user_id, memory_array):
     resp = requests.post(GAS_API_URL, json=payload)
     resp.raise_for_status()
     return resp.json()
+
 
 def generate_gpt_response(history, user_message, system_prompt):
     gpt_messages = [{"role": "system", "content": system_prompt}]
@@ -288,7 +318,7 @@ def generate_gpt_response(history, user_message, system_prompt):
 # Для теста — впиши ключ вручную или используй окружение:
 GREEN_API_ID = os.getenv("GREEN_API_ID")
 GREEN_API_TOKEN = os.getenv("GREEN_API_TOKEN")
-OPENAI_API_TOKEN = os.getenv("OPENAI_API_TOKEN") # <-- замени на свой
+OPENAI_API_TOKEN = os.getenv("OPENAI_API_TOKEN")  # <-- замени на свой
 
 client = openai.OpenAI(api_key=OPENAI_API_TOKEN)
 app = Flask(__name__)
@@ -562,6 +592,7 @@ def send_message(phone, text):
     response = requests.post(url, json=payload)
     logging.info(f"Green API ответ: {response.status_code} - {response.text}")
 
+
 @app.route("/webhook", methods=["POST"])
 def webhook():
     try:
@@ -593,7 +624,8 @@ def webhook():
         system_prompt = get_system_prompt()
         gpt_messages = [{"role": "system", "content": system_prompt}]
         for msg in history:
-            gpt_messages.append({"role": msg["role"], "content": msg["content"]})
+            gpt_messages.append(
+                {"role": msg["role"], "content": msg["content"]})
         gpt_messages.append({"role": "user", "content": message})
 
         response = client.chat.completions.create(
@@ -607,8 +639,8 @@ def webhook():
         choice = response.choices[0].message
         logging.info(f"--- ОТВЕТ OPENAI ---\n{choice}\n----------------------")
 
-                # --- Supply-loop: обработка цепочки tool_calls ---
-                # --- Supply-loop: обработка цепочки tool_calls ---
+        # --- Supply-loop: обработка цепочки tool_calls ---
+        # --- Supply-loop: обработка цепочки tool_calls ---
         while True:
             tool_calls = getattr(choice, "tool_calls", None)
             if tool_calls:
@@ -655,7 +687,7 @@ def webhook():
                                 result = f"❗️Мастер '{args['master']}' не найден. Доступные: {', '.join(all_staff.keys())}"
                             else:
                                 try:
-                                    name=history[-1]['content'] if history else "Клиент WhatsApp"
+                                    name = history[-1]['content'] if history else "Клиент WhatsApp"
                                     book(
                                         name=name,
                                         phone=phone,
@@ -665,7 +697,8 @@ def webhook():
                                         comment="Запись через WhatsApp"
                                     )
                                     result = f"✅ Вы успешно записаны на {args['service']} к мастеру {args['master']} {date} в {time}! Ждём вас в салоне."
-                                    logging.info(f"Успешная запись: клиент={name}, phone={phone}, service_id={service_id}, staff_id={staff_id}, date_time={date_time}")
+                                    logging.info(
+                                        f"Успешная запись: клиент={name}, phone={phone}, service_id={service_id}, staff_id={staff_id}, date_time={date_time}")
                                 except Exception as e:
                                     result = f"Ошибка при записи: {e}"
                         elif fn_name == "get_staff_for_service":
@@ -673,27 +706,36 @@ def webhook():
                             if isinstance(raw, dict) and raw:
                                 names = list(raw.keys())
                                 if names:
-                                    result = "Эту услугу выполняют:\n" + "\n".join(f"{i+1}. {name}" for i, name in enumerate(names))
+                                    result = "Эту услугу выполняют:\n" + \
+                                        "\n".join(
+                                            f"{i+1}. {name}" for i, name in enumerate(names))
                                 else:
                                     result = "Нет доступных мастеров для этой услуги."
                             else:
                                 result = "Не удалось получить информацию по мастерам для этой услуги."
                         elif fn_name == "get_staff_for_date_service":
-                            raw = get_staff_for_date_service(args.get("service_id"), args.get("date"))
+                            raw = get_staff_for_date_service(
+                                args.get("service_id"), args.get("date"))
                             if isinstance(raw, list) and raw:
-                                all_staff_names = get_all_staff_list_inv(get_all_staff_list())
-                                staff_names = [all_staff_names.get(staff_id, f"ID {staff_id}") for staff_id in raw]
+                                all_staff_names = get_all_staff_list_inv(
+                                    get_all_staff_list())
+                                staff_names = [all_staff_names.get(
+                                    staff_id, f"ID {staff_id}") for staff_id in raw]
                                 if staff_names:
-                                    result = "В этот день доступны мастера:\n" + "\n".join(f"{i+1}. {name}" for i, name in enumerate(staff_names))
+                                    result = "В этот день доступны мастера:\n" + \
+                                        "\n".join(
+                                            f"{i+1}. {name}" for i, name in enumerate(staff_names))
                                 else:
                                     result = "На эту дату нет доступных мастеров."
                             else:
                                 result = "Не удалось получить информацию по мастерам."
                         elif fn_name == "get_available_times_for_staff_service":
-                            raw = get_available_times_for_staff_service(args.get("staff_id"), args.get("service_id"), args.get("date"))
+                            raw = get_available_times_for_staff_service(
+                                args.get("staff_id"), args.get("service_id"), args.get("date"))
                             if isinstance(raw, list):
                                 if raw:
-                                    result = "Доступные времена записи:\n" + "\n".join(raw)
+                                    result = "Доступные времена записи:\n" + \
+                                        "\n".join(raw)
                                 else:
                                     result = "Нет доступных времён на эту дату."
                             else:
@@ -702,33 +744,42 @@ def webhook():
                         elif fn_name == "get_all_staff_list":
                             result = get_all_staff_list()
                         elif fn_name == "get_all_staff_list_inv":
-                            result = get_all_staff_list_inv(get_all_staff_list())
+                            result = get_all_staff_list_inv(
+                                get_all_staff_list())
                         elif fn_name == "get_all_services_list":
                             filter_str = args.get("filter_str")
-                            result = get_all_services_list(filter_str=filter_str)
+                            result = get_all_services_list(
+                                filter_str=filter_str)
                             if not result:
                                 result = "❗️Не найдено ни одной услуги по вашему запросу. Попробуйте уточнить название."
                         elif fn_name == "get_all_services_list_inv":
-                            result = get_all_services_list_inv(get_all_services_list())
+                            result = get_all_services_list_inv(
+                                get_all_services_list())
                         elif fn_name == "get_services_title_list_for_staff":
-                            result = get_services_title_list_for_staff(args.get("staff_id"))
+                            result = get_services_title_list_for_staff(
+                                args.get("staff_id"))
                         elif fn_name == "get_service_info":
                             result = get_service_info(args.get("service_id"))
                         elif fn_name == "get_available_dates_for_staff_service":
-                            result = get_available_dates_for_staff_service(args.get("staff_id"), args.get("service_id"))
+                            result = get_available_dates_for_staff_service(
+                                args.get("staff_id"), args.get("service_id"))
                         elif fn_name == "get_available_dates_for_service":
-                            result = get_available_dates_for_service(args.get("service_id"))
+                            result = get_available_dates_for_service(
+                                args.get("service_id"))
                         elif fn_name == "get_staff_for_date_time_service":
-                            result = get_staff_for_date_time_service(args.get("service_id"), args.get("date"), args.get("time"))
+                            result = get_staff_for_date_time_service(
+                                args.get("service_id"), args.get("date"), args.get("time"))
                         elif fn_name == "get_available_times_for_service":
-                            result = get_available_times_for_service(args.get("service_id"), args.get("date"))
+                            result = get_available_times_for_service(
+                                args.get("service_id"), args.get("date"))
                         elif fn_name == "book":
                             book(args.get("name"), args.get("phone", phone), args.get("service_id"), args.get("date_time"),
                                  args.get("staff_id"), args.get("comment", "Запись через WhatsApp"))
                             result = f"✅ Вы успешно записаны на услугу {args.get('service_id')} к мастеру {args.get('staff_id')} на {args.get('date_time')}!"
                         elif fn_name == "get_knowledge_base":
                             kb = get_knowledge_base()
-                            result = "\n".join([f"{item['term']}: {item['explanation']}" for item in kb])
+                            result = "\n".join(
+                                [f"{item['term']}: {item['explanation']}" for item in kb])
                         else:
                             result = "Функция не реализована или параметры не распознаны."
                     except Exception as e:
@@ -758,7 +809,8 @@ def webhook():
                 return "OK", 200
         else:
             print("⚠️ GPT не вызвал функцию — fallback в чистый диалог.")
-            fallback_response = generate_gpt_response(history, message, system_prompt)
+            fallback_response = generate_gpt_response(
+                history, message, system_prompt)
             send_message(phone, fallback_response)
             add_memory(phone, "assistant", fallback_response)
             return "OK", 200
@@ -769,10 +821,10 @@ def webhook():
         return "OK", 200
 
 
-
 @app.route("/", methods=["GET"])
 def home():
     return "Бот работает!", 200
+
 
 if __name__ == "__main__":
     print(">>> Flask is starting!")
@@ -783,4 +835,3 @@ if __name__ == "__main__":
     print("GREEN_API_ID:", GREEN_API_ID)
     print("GREEN_API_TOKEN:", GREEN_API_TOKEN)
     app.run(host="0.0.0.0", port=8000)
-
