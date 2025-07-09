@@ -475,6 +475,8 @@ def webhook():
 						# ---- остальные функции без изменений, либо аналогичная обработка ----
 						elif fn_name == "get_all_staff_list":
 							result = get_all_staff_list()
+						elif fn_name == "get_service_categories":
+							result = get_service_categories()
 						elif fn_name == "get_all_staff_list_inv":
 							result = get_all_staff_list_inv(
 								get_all_staff_list())
