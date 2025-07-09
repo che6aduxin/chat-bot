@@ -19,25 +19,27 @@ logging.basicConfig(
     ]
 )
 
-
+GREEN_API_ID = os.getenv("GREEN_API_ID")
+GREEN_API_TOKEN = os.getenv("GREEN_API_TOKEN")
+OPENAI_API_TOKEN = os.getenv("OPENAI_API_TOKEN")
+YCLIENTS_APPLICATION_ID = os.getenv("YCLIENTS_APPLICATION_ID")
 YCLIENTS_API_TOKEN = os.getenv("YCLIENTS_API_TOKEN")
 YCLIENTS_COMPANY_ID = os.getenv("YCLIENTS_COMPANY_ID")
-YCLIENTS_FORM_ID = os.getenv("YCLIENTS_APPLICATION_ID")
-assert all((YCLIENTS_API_TOKEN, YCLIENTS_COMPANY_ID, YCLIENTS_FORM_ID)) == True, "Can't find env var"
-api = YClientsAPI(token=YCLIENTS_API_TOKEN, company_id=YCLIENTS_COMPANY_ID, form_id=YCLIENTS_FORM_ID)
+YCLIENTS_API_TOKEN_USER = os.getenv("YCLIENTS_API_TOKEN_USER")
+assert all((YCLIENTS_API_TOKEN, YCLIENTS_COMPANY_ID, YCLIENTS_APPLICATION_ID, GREEN_API_ID, GREEN_API_TOKEN, OPENAI_API_TOKEN, YCLIENTS_API_TOKEN_USER)) == True, "Can't find env var"
+
+api = YClientsAPI(token=YCLIENTS_API_TOKEN, company_id=YCLIENTS_COMPANY_ID, form_id=YCLIENTS_APPLICATION_ID)
 
 
 def get_service_categories():
-    url = "https://yclients.com/api/v1/company/606554/service_categories?include=services_count"
+    url = f"https://yclients.com/api/v1/company/{YCLIENTS_COMPANY_ID}/service_categories"
     headers = {
         'Content-Type': 'application/json',
-        'User-Token': os.getenv("YCLIENTS_API_TOKEN"),  # или Authorization...
-        'Company-Id': '606554',
+        "Accept": "application/vnd.yclients.v2+json",
+        "Authorization": f"Bearer {YCLIENTS_API_TOKEN}, User {YCLIENTS_API_TOKEN_USER}"
     }
     resp = requests.get(url, headers=headers)
-    print("Категории:", resp.json())
     return resp.json()
-
 
 def get_all_staff_list():
     all_staff = api.get_staff()
@@ -307,18 +309,6 @@ def generate_gpt_response(history, user_message, system_prompt):
         temperature=0.1
     )
     return response.choices[0].message.content
-
-
-# Если используешь переменные окружения для ключей, можешь так:
-# GREEN_API_ID = os.getenv("GREEN_API_ID")
-# GREEN_API_TOKEN = os.getenv("GREEN_API_TOKEN")
-# OPENAI_API_TOKEN = os.getenv("OPENAI_API_TOKEN")
-# client = openai.OpenAI(api_key=OPENAI_API_TOKEN)
-
-# Для теста — впиши ключ вручную или используй окружение:
-GREEN_API_ID = os.getenv("GREEN_API_ID")
-GREEN_API_TOKEN = os.getenv("GREEN_API_TOKEN")
-OPENAI_API_TOKEN = os.getenv("OPENAI_API_TOKEN")  # <-- замени на свой
 
 client = openai.OpenAI(api_key=OPENAI_API_TOKEN)
 app = Flask(__name__)
@@ -830,7 +820,7 @@ if __name__ == "__main__":
     print(">>> Flask is starting!")
     print("YCLIENTS_API_TOKEN:", YCLIENTS_API_TOKEN)
     print("YCLIENTS_COMPANY_ID:", YCLIENTS_COMPANY_ID)
-    print("YCLIENTS_FORM_ID:", YCLIENTS_FORM_ID)
+    print("YCLIENTS_APPLICATION_ID:", YCLIENTS_APPLICATION_ID)
     print("OPENAI_API_TOKEN:", OPENAI_API_TOKEN)
     print("GREEN_API_ID:", GREEN_API_ID)
     print("GREEN_API_TOKEN:", GREEN_API_TOKEN)
