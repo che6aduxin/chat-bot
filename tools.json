@@ -335,5 +335,24 @@
 				]
 			}
 		}
+	},
+	{
+		"type": "function",
+		"function": {
+			"name": "get_service_categories",
+			"description": "Получить список всех категорий услуг",
+			"parameters": {
+				"type": "object",
+				"properties": {
+					"list": {
+						"type": "string",
+						"description": "Список всех услуг"
+					}
+				},
+				"required": [
+					"list"
+				]
+			}
+		}
 	}
 ]
