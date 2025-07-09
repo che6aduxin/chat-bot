@@ -561,6 +561,8 @@ def home():
 
 
 if __name__ == "__main__":
+	with open("test.txt", "w") as fn:
+		fn.write("abc")
 	print(">>> Flask is starting!")
 	print("YCLIENTS_API_TOKEN:", YCLIENTS_API_TOKEN)
 	print("YCLIENTS_COMPANY_ID:", YCLIENTS_COMPANY_ID)
