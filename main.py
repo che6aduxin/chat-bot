@@ -21,11 +21,11 @@ YCLIENTS_API_TOKEN_USER = os.getenv("YCLIENTS_API_TOKEN_USER")
 DB_MAX_MESSAGES = int(os.getenv("DB_MAX_MESSAGES", "100"))
 
 db_config = {
-    "user": os.getenv("DB_USERNAME"),
-    "password": os.getenv("DB_PASSWORD"),
-    "host": os.getenv("DB_HOST"),
-    "port": int(os.getenv("DB_PORT", "3306")),
-    "database": os.getenv("DB_NAME")
+	"user": os.getenv("DB_USERNAME"),
+	"password": os.getenv("DB_PASSWORD"),
+	"host": os.getenv("DB_HOST"),
+	"port": int(os.getenv("DB_PORT", "3306")),
+	"database": os.getenv("DB_NAME")
 }
 pool = mysql.pooling.MySQLConnectionPool(pool_name="main_pool", pool_size=5, pool_reset_session=True, **db_config) # 5 connections for db access
 with open("tools.json", "r", encoding='utf-8') as fn: tools = json.load(fn) # tools
@@ -57,7 +57,14 @@ def get_memory(phone: str) -> list:
 
 		with connection.cursor() as cursor:
 			cursor.execute("select messages from users where phone = %s", (phone,))
-			return cursor.fetchall()
+			result = cursor.fetchall()
+		if result and result[0]:
+			try:
+				return json.loads(result[0])
+			except json.JSONDecodeError:
+				logging.warning("messages повреждены, сбрасываем")
+				return []
+		return []
 
 
 def update_memory(phone: str, messages: list) -> None:
@@ -74,7 +81,7 @@ def update_memory(phone: str, messages: list) -> None:
 
 def generate_gpt_response(history: list[dict]) -> Choice:
 	system_message = {"role": "developer", "content": get_system_prompt()}
-	if history[0] != system_message: history.insert(0, system_message)
+	if not history or history[0] != system_message: history.insert(0, system_message)
 	print("DEBUG:", json.dumps(history, indent=2))
 	response = client.chat.completions.create(
 		model="gpt-4o",
@@ -86,8 +93,8 @@ def generate_gpt_response(history: list[dict]) -> Choice:
 	return response.choices[0]
 
 def call_function(func_name: str, args: dict = {}):
-    # !!! ТОЛЬКО МЕТОДЫ ОБЪЕКТА YCLIENTSAPI !!!
-	method = getattr(api, func_name, None)
+	# !!! ТОЛЬКО МЕТОДЫ ОБЪЕКТА YCLIENTSAPI !!!
+	method = getattr(yclients_api, func_name, None)
 	if method is None or not callable(method):
 		return f"Метод `{func_name}` не найден или не является функцией."
 	return method(**args)
