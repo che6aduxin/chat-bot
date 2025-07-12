@@ -2,125 +2,80 @@
 	{
 		"type": "function",
 		"function": {
-			"name": "book_service",
-			"description": "Бронирование услуги в салоне красоты. Если сообщение пользователя содержит услугу, мастера, дату (ДД.ММ.ГГГГ) и время (ЧЧ:ММ), ВСЕГДА вызывай функцию. Если чего-то не хватает спроси только это. Не отвечай текстом, если все параметры есть.",
-			"parameters": {
-				"type": "object",
-				"properties": {
-					"service": {
-						"type": "string",
-						"description": "Название услуги, например 'Массаж лица'"
-					},
-					"master": {
-						"type": "string",
-						"description": "Имя мастера, например 'Андрей'"
-					},
-					"date": {
-						"type": "string",
-						"description": "Дата в формате ДД.ММ.ГГГГ"
-					},
-					"time": {
-						"type": "string",
-						"description": "Время в формате ЧЧ:ММ"
-					}
-				},
-				"required": [
-					"service",
-					"master",
-					"date",
-					"time"
-				]
-			}
-		}
-	},
-	{
-		"type": "function",
-		"function": {
-			"name": "get_all_staff_list",
-			"description": "Возвращает словарь со всем персоналом, где ключами являются имена сотрудников, а значениями — их id.",
-			"parameters": {
-				"type": "object",
-				"properties": {},
-				"required": []
-			}
-		}
-	},
-	{
-		"type": "function",
-		"function": {
-			"name": "get_all_staff_list_inv",
-			"description": "Возвращает словарь со всем персоналом, где ключами являются id сотрудников, а значениями — их имена.",
-			"parameters": {
-				"type": "object",
-				"properties": {},
-				"required": []
-			}
-		}
-	},
-	{
-		"type": "function",
-		"function": {
-			"name": "get_all_services_list",
-			"description": "Возвращает словарь с услугами, где ключ — название услуги, значение — id услуги. Можно фильтровать услуги по названию с помощью параметра filter_str (например, 'чистка', 'спина'). Если filter_str не указан, возвращает не более 15 любых услуг для избежания спама.",
-			"parameters": {
-				"type": "object",
-				"properties": {
-					"filter_str": {
-						"type": "string",
-						"description": "Фильтр по названию услуги (например, 'спина', 'чистка'). Можно не указывать."
-					}
-				},
-				"required": []
-			}
-		}
-	},
-	{
-		"type": "function",
-		"function": {
-			"name": "get_all_services_list_inv",
-			"description": "Возвращает словарь со всеми услугами, где ключами являются id услуг, а значениями — их названия.",
-			"parameters": {
-				"type": "object",
-				"properties": {},
-				"required": []
-			}
-		}
-	},
-	{
-		"type": "function",
-		"function": {
-			"name": "get_services_title_list_for_staff",
-			"description": "Возвращает список услуг, которые выполняет конкретный работник по id этого работника.",
+			"name": "get_service_categories",
+			"description": "Получить все доступные категории услуг. Отсюда можно узнавать их category_id",
 			"parameters": {
 				"type": "object",
 				"properties": {
 					"staff_id": {
 						"type": "string",
-						"description": "id работника, для которого ищется список услуг"
+						"description": "Фильтр по id сотрудника"
+					},
+					"datetime": {
+						"type": "string",
+						"description": "Фильтр по дате в формате iso8601"
+					},
+					"service_ids": {
+						"type": "array",
+						"items": {
+							"type": "integer"
+						},
+						"description": "Фильтр по id услуг"
 					}
 				},
-				"required": [
-					"staff_id"
-				]
+				"required": []
 			}
 		}
 	},
 	{
 		"type": "function",
 		"function": {
-			"name": "get_staff_for_service",
-			"description": "Возвращает словарь с работниками, которые выполняют конкретную услугу по id услуги, где ключами являются имена сотрудников, а значениями — их id.",
+			"name": "get_services_list",
+			"description": "Получить все доступные услуги. Отсюда можешь узнавать их service_id",
 			"parameters": {
 				"type": "object",
 				"properties": {
-					"service_id": {
+					"staff_id": {
 						"type": "string",
-						"description": "id услуги, для которой ищется список сотрудников"
+						"description": "Фильтр по id сотрудника"
+					},
+					"datetime": {
+						"type": "string",
+						"description": "Фильтр по дате в формате iso8601"
+					},
+					"service_ids": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						},
+						"description": "Фильтр по id услуг"
 					}
 				},
-				"required": [
-					"service_id"
-				]
+				"required": []
+			}
+		}
+	},
+	{
+		"type": "function",
+		"function": {
+			"name": "get_staff_list",
+			"description": "Получить список всех доступных сотрудников",
+			"parameters": {
+				"type": "object",
+				"properties": {
+					"datetime": {
+						"type": "string",
+						"description": "Фильтр по дате в формате iso8601"
+					},
+					"service_ids": {
+						"type": "array",
+						"items": {
+							"type": "integer"
+						},
+						"description": "Фильтр по id услуг"
+					}
+				},
+				"required": []
 			}
 		}
 	},
@@ -128,13 +83,21 @@
 		"type": "function",
 		"function": {
 			"name": "get_service_info",
-			"description": "Возвращает описание услуги по ее id в виде списка: [название, цена, длительность (в минутах)].",
+			"description": "Получить информацию по услуге",
 			"parameters": {
 				"type": "object",
 				"properties": {
 					"service_id": {
 						"type": "string",
-						"description": "id услуги для которой нужно найти информацию"
+						"description": "Id услуги, информацию которой надо получить"
+					},
+					"staff_id": {
+						"type": "string",
+						"description": "Фильтр по id сотрудника"
+					},
+					"datetime": {
+						"type": "string",
+						"description": "Фильтр по дате в формате iso8601"
 					}
 				},
 				"required": [
@@ -146,211 +109,66 @@
 	{
 		"type": "function",
 		"function": {
-			"name": "get_available_dates_for_staff_service",
-			"description": "Возвращает список дат, на которые доступна запись для заданного работника и услуги в формате ГГГГ-ММ-ДД.",
+			"name": "get_available_dates",
+			"description": "Получить доступные даты по фильтрам",
 			"parameters": {
 				"type": "object",
 				"properties": {
 					"staff_id": {
 						"type": "string",
-						"description": "id работника"
+						"description": "Фильтр по id сотрудника"
 					},
-					"service_id": {
-						"type": "string",
-						"description": "id услуги"
-					}
-				},
-				"required": [
-					"staff_id",
-					"service_id"
-				]
-			}
-		}
-	},
-	{
-		"type": "function",
-		"function": {
-			"name": "get_available_dates_for_service",
-			"description": "Возвращает список дат, на которые доступна запись для заданной услуги (без указания работника) в формате ГГГГ-ММ-ДД.",
-			"parameters": {
-				"type": "object",
-				"properties": {
-					"service_id": {
-						"type": "string",
-						"description": "id услуги"
-					}
-				},
-				"required": [
-					"service_id"
-				]
-			}
-		}
-	},
-	{
-		"type": "function",
-		"function": {
-			"name": "get_staff_for_date_service",
-			"description": "Возвращает список с id персонала, доступного в заданную дату и на заданную услугу.",
-			"parameters": {
-				"type": "object",
-				"properties": {
-					"service_id": {
-						"type": "string",
-						"description": "id услуги"
+					"service_ids": {
+						"type": "array",
+						"items": {
+							"type": "integer"
+						},
+						"description": "Фильтр по id услуг"
 					},
 					"date": {
 						"type": "string",
-						"description": "дата в формате ГГГГ-ММ-ДД"
+						"description": "Дата в формате iso8601. Фильтр по месяцу бронирования."
+					},
+					"date_from": {
+						"type": "string",
+						"description": "Дата в формате iso8601. Начало диапазона поиска. Используется в паре с параметром 'date_to' и имеет приоритет перед параметром 'date'."
+					},
+					"date_to": {
+						"type": "string",
+						"description": "Дата в формате iso8601. Окончание диапазона поиска. Используется в паре с параметром 'date_from' и имеет приоритет перед параметром 'date'."
 					}
 				},
-				"required": [
-					"service_id",
-					"date"
-				]
+				"required": []
 			}
 		}
 	},
 	{
 		"type": "function",
 		"function": {
-			"name": "get_staff_for_date_time_service",
-			"description": "Возвращает список с id персонала, доступного в заданную дату, на заданное время, и на заданную услугу.",
+			"name": "get_available_times",
+			"description": "Получить доступные сеансы по фильтрам",
 			"parameters": {
 				"type": "object",
 				"properties": {
-					"service_id": {
+					"staff_id": {
 						"type": "string",
-						"description": "id услуги"
+						"description": "Фильтр по id сотрудника"
+					},
+					"service_ids": {
+						"type": "array",
+						"items": {
+							"type": "integer"
+						},
+						"description": "Фильтр по id услуг"
 					},
 					"date": {
 						"type": "string",
-						"description": "дата в формате ГГГГ-ММ-ДД"
-					},
-					"time": {
-						"type": "string",
-						"description": "время в формате ЧЧ:ММ"
+						"description": "Дата в формате iso8601. Фильтр по дате бронирования"
 					}
 				},
 				"required": [
-					"service_id",
 					"date",
-					"time"
-				]
-			}
-		}
-	},
-	{
-		"type": "function",
-		"function": {
-			"name": "get_available_times_for_staff_service",
-			"description": "Возвращает список доступных времен для записи на заданную услугу к заданному работнику.",
-			"parameters": {
-				"type": "object",
-				"properties": {
-					"staff_id": {
-						"type": "string",
-						"description": "id работника"
-					},
-					"service_id": {
-						"type": "string",
-						"description": "id услуги"
-					},
-					"date": {
-						"type": "string",
-						"description": "дата в формате ГГГГ-ММ-ДД"
-					}
-				},
-				"required": [
-					"staff_id",
-					"service_id",
-					"date"
-				]
-			}
-		}
-	},
-	{
-		"type": "function",
-		"function": {
-			"name": "get_available_times_for_service",
-			"description": "Возвращает список доступных времен для записи на заданную услугу (без указания работника).",
-			"parameters": {
-				"type": "object",
-				"properties": {
-					"service_id": {
-						"type": "string",
-						"description": "id услуги"
-					},
-					"date": {
-						"type": "string",
-						"description": "дата в формате ГГГГ-ММ-ДД"
-					}
-				},
-				"required": [
-					"service_id",
-					"date"
-				]
-			}
-		}
-	},
-	{
-		"type": "function",
-		"function": {
-			"name": "book",
-			"description": "Выполняет запись клиента на заданное время, в заданную дату, на заданную услугу и к заданному работнику.",
-			"parameters": {
-				"type": "object",
-				"properties": {
-					"name": {
-						"type": "string",
-						"description": "Имя клиента"
-					},
-					"phone": {
-						"type": "string",
-						"description": "Номер телефона клиента"
-					},
-					"service_id": {
-						"type": "string",
-						"description": "id услуги"
-					},
-					"date_time": {
-						"type": "string",
-						"description": "Дата и время в формате ГГГГ-ММ-ДД'T'ЧЧ:ММ:СС'+3:00'"
-					},
-					"staff_id": {
-						"type": "string",
-						"description": "id работника"
-					},
-					"comment": {
-						"type": "string",
-						"description": "Комментарий к записи (по умолчанию — 'Запись через Whatsapp')."
-					}
-				},
-				"required": [
-					"name",
-					"phone",
-					"service_id",
-					"date_time",
-					"staff_id",
-					"comment"
-				]
-			}
-		}
-	},
-	{
-		"type": "function",
-		"function": {
-			"name": "get_service_categories",
-			"description": "Получить список всех категорий услуг",
-			"parameters": {
-				"type": "object",
-				"properties": {
-					"list": {
-						"type": "string",
-						"description": "Список всех услуг"
-					}
-				},
-				"required": [
-					"list"
+					"staff_id"
 				]
 			}
 		}
