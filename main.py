@@ -56,7 +56,7 @@ def get_memory(phone: str) -> list:
 			connection.reconnect()
 
 		with connection.cursor() as cursor:
-			cursor.execute("select messages from users where phone = %s", (phone))
+			cursor.execute("select messages from users where phone = %s", (phone,))
 			return cursor.fetchall()
 
 
