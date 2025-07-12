@@ -133,7 +133,7 @@ def webhook():
 		history = get_memory(phone)
 		history.append({"role": "user", "content": message})
 		choice = generate_gpt_response(history)
-		history.append(choice.message)
+		history.append(choice.message.model_dump())
 		logging.info(f"--- ОТВЕТ OPENAI ---\n{choice}\n----------------------")
 
 		if choice.finish_reason == "tool_calls":
