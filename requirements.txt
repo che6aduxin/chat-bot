@@ -1,6 +1,5 @@
-flask
-requests
-openai
-pandas
-ujson
-httpx
+Flask==3.1.1
+mysql_connector_repackaged==0.3.1
+openai==1.95.1
+python-dotenv==1.1.1
+Requests==2.32.4
