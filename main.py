@@ -57,7 +57,7 @@ def get_memory(phone: str) -> list:
 
 		with connection.cursor() as cursor:
 			cursor.execute("select messages from users where phone = %s", (phone,))
-			result = cursor.fetchall()
+			result = cursor.fetchone()
 		if result and result[0]:
 			try:
 				return json.loads(result[0])
@@ -82,7 +82,6 @@ def update_memory(phone: str, messages: list) -> None:
 def generate_gpt_response(history: list[dict]) -> Choice:
 	system_message = {"role": "developer", "content": get_system_prompt()}
 	if not history or history[0] != system_message: history.insert(0, system_message)
-	print("DEBUG:", json.dumps(history, indent=2))
 	response = client.chat.completions.create(
 		model="gpt-4o",
 		messages=history,
