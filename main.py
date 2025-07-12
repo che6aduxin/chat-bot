@@ -4,27 +4,28 @@ import openai
 from openai.types.chat.chat_completion import Choice
 from flask import Flask, request
 import json
+import os
 import logging
 import mysql.connector as mysql
-from dotenv import dotenv_values
+from dotenv import load_dotenv
 
 # Configuration
-CONFIG = dotenv_values(".env") # env variables
-GREEN_API_ID = CONFIG["GREEN_API_ID"]
-GREEN_API_TOKEN = CONFIG["GREEN_API_TOKEN"]
-OPENAI_API_TOKEN = CONFIG["OPENAI_API_TOKEN"]
-YCLIENTS_APPLICATION_ID = CONFIG["YCLIENTS_APPLICATION_ID"]
-YCLIENTS_API_TOKEN = CONFIG["YCLIENTS_API_TOKEN"]
-YCLIENTS_COMPANY_ID = CONFIG["YCLIENTS_COMPANY_ID"]
-YCLIENTS_API_TOKEN_USER = CONFIG["YCLIENTS_API_TOKEN_USER"]
-DB_MAX_MESSAGES = CONFIG["DB_MAX_MESSAGES"]
+load_dotenv()
+GREEN_API_ID = os.getenv("GREEN_API_ID")
+GREEN_API_TOKEN = os.getenv("GREEN_API_TOKEN")
+OPENAI_API_TOKEN = os.getenv("OPENAI_API_TOKEN")
+YCLIENTS_APPLICATION_ID = os.getenv("YCLIENTS_APPLICATION_ID")
+YCLIENTS_API_TOKEN = os.getenv("YCLIENTS_API_TOKEN")
+YCLIENTS_COMPANY_ID = os.getenv("YCLIENTS_COMPANY_ID")
+YCLIENTS_API_TOKEN_USER = os.getenv("YCLIENTS_API_TOKEN_USER")
+DB_MAX_MESSAGES = int(os.getenv("DB_MAX_MESSAGES", "100"))
 
 db_config = {
-	"user": CONFIG["DB_USERNAME"],
-	"password": CONFIG["DB_PASSWORD"],
-	"host": CONFIG["DB_HOST"],
-	"port": CONFIG["DB_PORT"],
-	"database": CONFIG["DB_NAME"]
+    "user": os.getenv("DB_USERNAME"),
+    "password": os.getenv("DB_PASSWORD"),
+    "host": os.getenv("DB_HOST"),
+    "port": int(os.getenv("DB_PORT", "3306")),
+    "database": os.getenv("DB_NAME")
 }
 pool = mysql.pooling.MySQLConnectionPool(pool_name="main_pool", pool_size=5, pool_reset_session=True, **db_config) # 5 connections for db access
 with open("tools.json", "r", encoding='utf-8') as fn: tools = json.load(fn) # tools
@@ -60,7 +61,7 @@ def get_memory(phone: str) -> list:
 
 
 def update_memory(phone: str, messages: list) -> None:
-	if len(messages) > int(CONFIG["DB_MAX_MESSAGES"]): messages = messages[int(CONFIG["DB_MAX_MESSAGES"]) // 5:]
+	if len(messages) > DB_MAX_MESSAGES: messages = messages[DB_MAX_MESSAGES // 5:]
 
 	with pool.get_connection() as connection:
 		if not connection.is_connected():
