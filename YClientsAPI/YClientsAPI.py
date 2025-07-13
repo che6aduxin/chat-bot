@@ -1,5 +1,6 @@
 import json
 import requests
+from typing import Any
 
 class YClientsAPI:
 	def __init__(self, bearer_token, user_token, company_id):
@@ -72,3 +73,21 @@ class YClientsAPI:
 		if service_ids: params["service_ids"] = service_ids
 		resp = requests.get(url, headers=self.HEADERS, params=params)
 		return resp.json()["data"]
+
+	def book(self, booking_id: int, fullname: str, phone: str, staff_id: int, date_time: str, email: str = "noemail@noemail.com", service_id: int = 0, comment: str = "") -> dict:
+		url = f"https://yclients.com/api/v1/book_record/{self.COMPANY_ID}/"
+		payload = {
+			"phone": phone,
+			"fullname": fullname,
+			"email": email,
+			"comment": comment,
+			"notify_by_email": 0,
+			"appointments": [{
+				"id": booking_id,
+				"services": [int(service_id)],
+				"staff_id": int(staff_id or 0),
+				"datetime": date_time
+			}]
+		}
+		response = requests.post(url, json=payload, headers=self.HEADERS)
+		return response.json()

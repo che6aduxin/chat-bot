@@ -90,8 +90,8 @@ def update_memory(phone: str, messages: list) -> None:
 			cursor.execute("UPDATE users SET messages = %s WHERE phone = %s", (messages_str, phone))
 			connection.commit()
 
-def generate_gpt_response(history: list[dict]) -> Choice:
-	system_message = {"role": "developer", "content": get_system_prompt()}
+def generate_gpt_response(history: list[dict], name: str, phone: str) -> Choice:
+	system_message = {"role": "developer", "content": get_system_prompt() + f"\nИмя клиента: {name}\nТелефон клиента: {phone.replace("@c.us", "")}"}
 	if not history or history[0] != system_message: history.insert(0, system_message)
 	response = client.chat.completions.create(
 		model="gpt-4o",
@@ -137,11 +137,12 @@ def webhook():
 			return "Ignored", 200
 
 		phone = data["senderData"]["chatId"]
+		name = data["senderData"]["chatName"]
 		logging.info(f'Входящее сообщение: "{message}" от {phone}')
 
 		history = get_memory(phone)
 		history.append({"role": "user", "content": message})
-		choice = generate_gpt_response(history)
+		choice = generate_gpt_response(history, name, phone)
 		history.append(choice.message.model_dump())
 		logging.info("---- ОТВЕТ OPENAI ----")
 		logging.info(f"{choice}")
@@ -160,7 +161,7 @@ def webhook():
 					"tool_call_id": tool_call.id,
 					"content": str(result)
 				})
-			choice = generate_gpt_response(history)
+			choice = generate_gpt_response(history, name, phone)
 			history.append(choice.message.model_dump())
 		send_message(phone, choice.message.content)
 		update_memory(phone, history)

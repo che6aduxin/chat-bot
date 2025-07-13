@@ -172,5 +172,58 @@
 				]
 			}
 		}
+	},
+	{
+		"type": "function",
+		"function": {
+			"name": "book",
+			"description": "Создать онлайн-запись клиента на услугу с указанием даты, специалиста и контактов",
+			"parameters": {
+				"type": "object",
+				"properties": {
+					"booking_id": {
+						"type": "integer",
+						"description": "Идентификатор записи для обратной связи после сохранения"
+					},
+					"fullname": {
+						"type": "string",
+						"description": "Имя клиента"
+					},
+					"phone": {
+						"type": "string",
+						"description": "Телефон клиента (например 79161502239)"
+					},
+					"email": {
+						"type": "string",
+						"description": "Почтовый адрес клиента"
+					},
+					"staff_id": {
+						"type": "integer",
+						"description": "Идентификатор специалиста, к которому клиент хочет записаться (0 если выбран любой мастер)"
+					},
+					"date_time": {
+						"type": "string",
+						"description": "Дата и время сеанса в формате ISO8601"
+					},
+					"service_id": {
+						"type": "integer",
+						"description": "Идентификатор услуги (если есть)",
+						"default": 0
+					},
+					"comment": {
+						"type": "string",
+						"description": "Комментарий к записи (необязательно)",
+						"default": ""
+					}
+				},
+				"required": [
+					"booking_id",
+					"fullname",
+					"phone",
+					"staff_id",
+					"date_time"
+				]
+			}
+		}
 	}
 ]
