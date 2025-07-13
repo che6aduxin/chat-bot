@@ -74,8 +74,8 @@ def get_memory(phone: str) -> list:
 				return json.loads(result[0])
 			except json.JSONDecodeError:
 				logging.warning("messages повреждены, сбрасываем")
-				return []
-		return []
+				return [{"role": "developer", "content": get_system_prompt()}]
+		return [{"role": "developer", "content": get_system_prompt()}]
 
 
 def update_memory(phone: str, messages: list) -> None:
