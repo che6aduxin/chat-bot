@@ -148,7 +148,7 @@ def webhook():
 		logging.info(f"{choice}")
 		logging.info("----------------------")
 
-		if choice.finish_reason == "tool_calls":
+		while choice.finish_reason == "tool_calls":
 			for tool_call in choice.message.tool_calls:
 				name = tool_call.function.name
 				args = json.loads(tool_call.function.arguments)
