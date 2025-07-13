@@ -30,6 +30,8 @@ db_config = {
 pool = mysql.pooling.MySQLConnectionPool(pool_name="main_pool", pool_size=5, pool_reset_session=True, **db_config) # 5 connections for db access
 with open("tools.json", "r", encoding='utf-8') as fn: tools = json.load(fn) # tools
 yclients_api = YClientsAPI(YCLIENTS_API_TOKEN, YCLIENTS_API_TOKEN_USER, YCLIENTS_COMPANY_ID) # yclients class object
+client = openai.OpenAI(api_key=OPENAI_API_TOKEN)
+app = Flask(__name__)
 
 
 logging.basicConfig(
@@ -41,7 +43,15 @@ logging.basicConfig(
 	]
 )
 
-assert all((YCLIENTS_API_TOKEN, YCLIENTS_COMPANY_ID, YCLIENTS_APPLICATION_ID, GREEN_API_ID, GREEN_API_TOKEN, OPENAI_API_TOKEN, YCLIENTS_API_TOKEN_USER)) == True, "Can't find env var"
+assert all((
+	YCLIENTS_API_TOKEN,
+	YCLIENTS_COMPANY_ID,
+	YCLIENTS_APPLICATION_ID,
+	GREEN_API_ID,
+	GREEN_API_TOKEN,
+	OPENAI_API_TOKEN,
+	YCLIENTS_API_TOKEN_USER
+	)) == True, "Can't find env var"
 # End of configuration
 
 # System functions
@@ -98,8 +108,6 @@ def call_function(func_name: str, args: dict = {}):
 		return f"Метод `{func_name}` не найден или не является функцией."
 	return method(**args)
 
-client = openai.OpenAI(api_key=OPENAI_API_TOKEN)
-app = Flask(__name__)
 
 def send_message(phone, text):
 	url = f"https://api.green-api.com/waInstance{GREEN_API_ID}/sendMessage/{GREEN_API_TOKEN}"
@@ -148,6 +156,7 @@ def webhook():
 					"content": str(result)
 				})
 			choice = generate_gpt_response(history)
+			history.append(choice.message.model_dump())
 		send_message(phone, choice.message.content)
 		update_memory(phone, history)
 		return "OK", 200
