@@ -36,11 +36,12 @@ app = Flask(__name__)
 
 logging.basicConfig(
 	level=logging.INFO,
-	format="%(asctime)s [%(levelname)s] %(message)s",
+	format="%(asctime)s | [%(levelname)s] - %(message)s",
 	handlers=[
 		logging.FileHandler("bot.log"),
 		logging.StreamHandler()
-	]
+	],
+	datefmt="%H:%M:%S %d.%m.%Y"
 )
 
 assert all((
@@ -142,12 +143,16 @@ def webhook():
 		history.append({"role": "user", "content": message})
 		choice = generate_gpt_response(history)
 		history.append(choice.message.model_dump())
-		logging.info(f"--- ОТВЕТ OPENAI ---\n{choice}\n----------------------")
+		logging.info("---- ОТВЕТ OPENAI ----")
+		logging.info(f"{choice}")
+		logging.info("----------------------")
 
 		if choice.finish_reason == "tool_calls":
 			for tool_call in choice.message.tool_calls:
 				name = tool_call.function.name
 				args = json.loads(tool_call.function.arguments)
+				logging.info(f"Function call: {name}")
+				logging.info(f"Arguments: {args}")
 
 				result = call_function(name, args)
 				history.append({
