@@ -3,14 +3,13 @@ import requests
 from typing import Any
 
 class YClientsAPI:
-	def __init__(self, bearer_token, user_token, company_id):
+	def __init__(self, bearer_token, company_id):
 		self.API_TOKEN_BEARER = bearer_token
-		self.API_TOKEN_USER = user_token
 		self.COMPANY_ID = company_id
 		self.HEADERS = {
 			'Content-Type': 'application/json',
 			"Accept": "application/vnd.yclients.v2+json",
-			"Authorization": f"Bearer {self.API_TOKEN_BEARER}, User {self.API_TOKEN_USER}"
+			"Authorization": f"Bearer {self.API_TOKEN_BEARER}"
 		}
 		self.URL = "https://api.yclients.com/api/v1"
 
@@ -42,17 +41,7 @@ class YClientsAPI:
 		params = {
 			"datetime": datetime
 		}
-		if service_ids: params["service_ids"] = service_ids
-		resp = requests.get(url, headers=self.HEADERS, params=params)
-		return resp.json()["data"]
-
-	def get_service_info(self, service_id: int, staff_id: int = 0, category_id: int = 0):
-		# Получить информацию об услуге
-		url = f"{self.URL}/company/{self.COMPANY_ID}/services/{service_id}"
-		params = {
-			"staff_id": staff_id,
-			"category_id": category_id
-		}
+		if service_ids: params["service_ids"] = service_ids # type: ignore
 		resp = requests.get(url, headers=self.HEADERS, params=params)
 		return resp.json()["data"]
 

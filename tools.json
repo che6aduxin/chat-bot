@@ -31,7 +31,7 @@
 		"type": "function",
 		"function": {
 			"name": "get_services_list",
-			"description": "Получить все доступные услуги. Отсюда можешь узнавать их service_id",
+			"description": "Получить все доступные услуги. Отсюда можешь узнавать их service_id и получать информацию по услуге, указав service_ids",
 			"parameters": {
 				"type": "object",
 				"properties": {
@@ -76,33 +76,6 @@
 					}
 				},
 				"required": []
-			}
-		}
-	},
-	{
-		"type": "function",
-		"function": {
-			"name": "get_service_info",
-			"description": "Получить информацию по услуге",
-			"parameters": {
-				"type": "object",
-				"properties": {
-					"service_id": {
-						"type": "string",
-						"description": "Id услуги, информацию которой надо получить"
-					},
-					"staff_id": {
-						"type": "string",
-						"description": "Фильтр по id сотрудника"
-					},
-					"datetime": {
-						"type": "string",
-						"description": "Фильтр по дате в формате iso8601"
-					}
-				},
-				"required": [
-					"service_id"
-				]
 			}
 		}
 	},

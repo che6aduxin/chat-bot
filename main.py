@@ -18,7 +18,6 @@ OPENAI_API_TOKEN = os.getenv("OPENAI_API_TOKEN")
 YCLIENTS_APPLICATION_ID = os.getenv("YCLIENTS_APPLICATION_ID")
 YCLIENTS_API_TOKEN = os.getenv("YCLIENTS_API_TOKEN")
 YCLIENTS_COMPANY_ID = os.getenv("YCLIENTS_COMPANY_ID")
-YCLIENTS_API_TOKEN_USER = os.getenv("YCLIENTS_API_TOKEN_USER")
 DB_MAX_MESSAGES = int(os.getenv("DB_MAX_MESSAGES", "100"))
 
 db_config = {
@@ -30,7 +29,7 @@ db_config = {
 }
 pool = mysql.pooling.MySQLConnectionPool(pool_name="main_pool", pool_size=5, pool_reset_session=True, **db_config) # 5 connections for db access
 with open("tools.json", "r", encoding='utf-8') as fn: tools = json.load(fn) # tools
-yclients_api = YClientsAPI(YCLIENTS_API_TOKEN, YCLIENTS_API_TOKEN_USER, YCLIENTS_COMPANY_ID) # yclients class object
+yclients_api = YClientsAPI(YCLIENTS_API_TOKEN, YCLIENTS_COMPANY_ID) # yclients class object
 client = openai.OpenAI(api_key=OPENAI_API_TOKEN)
 app = Flask(__name__)
 
@@ -52,7 +51,6 @@ assert all((
 	GREEN_API_ID,
 	GREEN_API_TOKEN,
 	OPENAI_API_TOKEN,
-	YCLIENTS_API_TOKEN_USER
 	)) == True, "Can't find env var"
 # End of configuration
 
@@ -96,7 +94,7 @@ def generate_gpt_response(history: list[dict], name: str, phone: str) -> Choice:
 	if not history or history[0] != system_message: history.insert(0, system_message)
 	response = client.chat.completions.create(
 		model="gpt-4o",
-		messages=history,
+		messages=history, # type: ignore
 		tools=tools,
 		tool_choice="auto",
 		temperature=0.1
@@ -150,7 +148,7 @@ def webhook():
 		logging.info("----------------------")
 
 		while choice.finish_reason == "tool_calls":
-			for tool_call in choice.message.tool_calls:
+			for tool_call in choice.message.tool_calls: # type: ignore
 				name = tool_call.function.name
 				args = json.loads(tool_call.function.arguments)
 				logging.info(f"Function call: {name}")
@@ -173,7 +171,7 @@ def webhook():
 
 	except Exception as e:
 		logging.exception("Ошибка в webhook:")
-		send_message(phone, "Произошла ошибка на сервере, попробуйте позже.")
+		send_message(phone, "Произошла ошибка на сервере, попробуйте позже.") # type: ignore
 		return "OK", 200
 
 
