@@ -47,6 +47,7 @@ class YClientsAPI:
 		return resp.json()["data"]
 
 	def get_service_info(self, service_id: int, staff_id: int = 0, category_id: int = 0):
+		# Получить информацию об услуге
 		url = f"{self.URL}/company/{self.COMPANY_ID}/services/{service_id}"
 		params = {
 			"staff_id": staff_id,

@@ -7,6 +7,7 @@ import json
 import os
 import logging
 import mysql.connector as mysql
+from typing import Any
 from dotenv import load_dotenv
 
 # Configuration
@@ -102,7 +103,7 @@ def generate_gpt_response(history: list[dict], name: str, phone: str) -> Choice:
 	)
 	return response.choices[0]
 
-def call_function(func_name: str, args: dict = {}):
+def call_function(func_name: str, args: dict = {}) -> Any:
 	# !!! ТОЛЬКО МЕТОДЫ ОБЪЕКТА YCLIENTSAPI !!!
 	method = getattr(yclients_api, func_name, None)
 	if method is None or not callable(method):
@@ -110,7 +111,7 @@ def call_function(func_name: str, args: dict = {}):
 	return method(**args)
 
 
-def send_message(phone, text):
+def send_message(phone, text) -> None:
 	url = f"https://api.green-api.com/waInstance{GREEN_API_ID}/sendMessage/{GREEN_API_TOKEN}"
 	payload = {
 		"chatId": f"{phone}",
