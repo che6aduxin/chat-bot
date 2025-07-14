@@ -81,3 +81,5 @@ class YClientsAPI:
 		}
 		response = requests.post(url, json=payload, headers=self.HEADERS)
 		return response.json()
+	
+	# TODO: добавить функцию для получения записей клиента
