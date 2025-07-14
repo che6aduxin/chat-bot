@@ -55,12 +55,12 @@ assert all((
 # End of configuration
 
 # System functions
-def get_system_prompt() -> str:
+def get_system_prompt(name: str, phone: str) -> str:
 	with open("prompt.txt", "r", encoding="utf-8") as prompt:
 		text = prompt.read()
-	return text
+	return text + f"\nИмя клиента: {name}\nТелефон клиента: {phone.replace("@c.us", "")}"
 
-def get_memory(phone: str) -> list:
+def get_memory(name: str, phone: str) -> list:
 	with pool.get_connection() as connection:
 		if not connection.is_connected():
 			connection.reconnect()
@@ -73,8 +73,8 @@ def get_memory(phone: str) -> list:
 				return json.loads(result[0])
 			except json.JSONDecodeError:
 				logging.warning("messages повреждены, сбрасываем")
-				return [{"role": "developer", "content": get_system_prompt()}]
-		return [{"role": "developer", "content": get_system_prompt()}]
+				return [{"role": "developer", "content": get_system_prompt(name, phone)}]
+		return [{"role": "developer", "content": get_system_prompt(name, phone)}]
 
 
 def update_memory(phone: str, messages: list) -> None:
@@ -86,11 +86,11 @@ def update_memory(phone: str, messages: list) -> None:
 
 		with connection.cursor() as cursor:
 			messages_str = json.dumps(messages)
-			cursor.execute("UPDATE users SET messages = %s WHERE phone = %s", (messages_str, phone))
+			cursor.execute("REPLACE INTO users(phone, messages) VALUES (%s, %s)", (phone, messages_str))
 			connection.commit()
 
 def generate_gpt_response(history: list[dict], name: str, phone: str) -> Choice:
-	system_message = {"role": "developer", "content": get_system_prompt() + f"\nИмя клиента: {name}\nТелефон клиента: {phone.replace("@c.us", "")}"}
+	system_message = {"role": "developer", "content": get_system_prompt(name, phone)}
 	if not history or history[0] != system_message: history.insert(0, system_message)
 	response = client.chat.completions.create(
 		model="gpt-4o",
@@ -142,7 +142,7 @@ def webhook():
 		name = data["senderData"]["chatName"]
 		logging.info(f'Входящее сообщение: "{message}" от {phone}')
 
-		history = get_memory(phone)
+		history = get_memory(name, phone)
 		history.append({"role": "user", "content": message})
 		choice = generate_gpt_response(history, name, phone)
 		history.append(choice.message.model_dump())
