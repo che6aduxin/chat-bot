@@ -101,6 +101,9 @@ def generate_gpt_response(history: list[dict], name: str, phone: str) -> Choice:
 	)
 	return response.choices[0]
 
+# TODO: Пофиксить эту ошибку: либо фул очищать историю, либо пробовать ответить на недостающие тулколсы
+# openai.BadRequestError: Error code: 400 - {'error': {'message': "An assistant message with 'tool_calls' must be followed by tool messages responding to each 'tool_call_id'. The following tool_call_ids did not have response messages: call_GGvLl4teD1eL3xUASYZyVK8O", 'type': 'invalid_request_error', 'param': 'messages.[19].role', 'code': None}}
+
 def call_function(func_name: str, args: dict = {}) -> Any:
 	# !!! ТОЛЬКО МЕТОДЫ ОБЪЕКТА YCLIENTSAPI !!!
 	method = getattr(yclients_api, func_name, None)
