@@ -8,6 +8,7 @@ import os
 import logging
 import mysql.connector as mysql
 from typing import Any
+import sys
 from dotenv import load_dotenv
 
 # Configuration
@@ -39,7 +40,7 @@ logging.basicConfig(
 	format="%(asctime)s | [%(levelname)s] - %(message)s",
 	handlers=[
 		logging.FileHandler("bot.log"),
-		logging.StreamHandler()
+		logging.StreamHandler(sys.stdout)
 	],
 	datefmt="%H:%M:%S %d.%m.%Y"
 )
