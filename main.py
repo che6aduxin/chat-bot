@@ -2,7 +2,7 @@ import requests
 from YClientsAPI import YClientsAPI
 import openai
 from openai.types.chat.chat_completion import Choice
-from flask import Flask, request
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 import json
 import os
 import logging
@@ -20,6 +20,9 @@ YCLIENTS_APPLICATION_ID = os.getenv("YCLIENTS_APPLICATION_ID")
 YCLIENTS_API_TOKEN = os.getenv("YCLIENTS_API_TOKEN")
 YCLIENTS_COMPANY_ID = os.getenv("YCLIENTS_COMPANY_ID")
 DB_MAX_MESSAGES = int(os.getenv("DB_MAX_MESSAGES", "100"))
+FLASK_SECRET_KEY = os.getenv("FLASK_SECRET_KEY")
+ADMIN_USERNAME = os.getenv("ADMIN_USERNAME")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 
 db_config = {
 	"user": os.getenv("DB_USERNAME"),
@@ -33,6 +36,7 @@ with open("tools.json", "r", encoding='utf-8') as fn: tools = json.load(fn) # to
 yclients_api = YClientsAPI(YCLIENTS_API_TOKEN, YCLIENTS_COMPANY_ID) # yclients class object
 client = openai.OpenAI(api_key=OPENAI_API_TOKEN)
 app = Flask(__name__)
+app.secret_key = FLASK_SECRET_KEY
 
 
 logging.basicConfig(
@@ -178,51 +182,40 @@ def webhook():
 		send_message(phone, "Произошла ошибка на сервере, попробуйте позже.") # type: ignore
 		return "OK", 200
 
-
-@app.route("/iframe", methods=["GET"])
-def iframe_view():
-    return """
-    <!DOCTYPE html>
-	<html lang="ru">
-	<head>
-	<meta charset="UTF-8">
-	<title>Мой iframe</title>
-	</head>
-	<body>
-	<h3>Фрейм загружен</h3>
-	<div id="info"></div>
-
-	<script>
-		// 1. Сообщаем YCLIENTS, что iframe готов
-		parent.postMessage({
-		type: "iframe_ready",
-		payload: { success: true }
-		}, "*");
-
-		// 2. Ждём данные от YCLIENTS
-		window.addEventListener("message", (event) => {
-		const msg = event.data;
-		if (msg.type === "yclients_response_entity") {
-			const entity = msg.payload.entity;
-			document.getElementById("info").innerText =
-			JSON.stringify(entity, null, 2);
-		}
-		});
-	</script>
-	</body>
-	</html>
-
-    """, 200
-
-@app.after_request
-def allow_iframe(response):
-    response.headers.pop("X-Frame-Options", None)
-    return response
-
-
 @app.route("/", methods=["GET"])
 def home():
-	return "Бот работает!", 200
+	return "Стандартная страница", 200
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        if request.form['username'] == ADMIN_USERNAME and request.form['password'] == ADMIN_PASSWORD:
+            session['logged_in'] = True
+            return redirect(url_for('admin'))
+        else:
+            flash('Неверные данные')
+    return render_template('login.html')
+
+@app.route('/admin', methods=['GET', 'POST'])
+def admin():
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+
+    file_path = 'prompt.txt'
+
+    if request.method == 'POST':
+        new_text = request.form['text']
+        with open(file_path, 'w', encoding='utf-8') as prompt:
+            prompt.write(new_text)
+        flash('Текст обновлён')
+
+    if os.path.exists(file_path):
+        with open(file_path, 'r', encoding='utf-8') as prompt:
+            current_text = prompt.read()
+    else:
+        current_text = ''
+
+    return render_template('admin.html', text=current_text)
 
 
 if __name__ == "__main__":

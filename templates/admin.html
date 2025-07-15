@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Панель администратора</title>
+</head>
+
+<body>
+	<h2>Редактировать текст</h2>
+	<form method="post">
+		<textarea name="text" rows="10" cols="50">{{ text }}</textarea><br>
+		<button type="submit">Сохранить</button>
+	</form>
+	<!-- <a href="{{ url_for('logout') }}">Выйти</a> -->
+	{% with messages = get_flashed_messages() %}
+	{% if messages %}
+	<p style="color:green;">{{ messages[0] }}</p>
+	{% endif %}
+	{% endwith %}
+</body>
+
+</html>
