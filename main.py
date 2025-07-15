@@ -182,12 +182,36 @@ def webhook():
 @app.route("/iframe", methods=["GET"])
 def iframe_view():
     return """
-    <html>
-        <head><title>YCLIENTS Iframe</title></head>
-        <body>
-            <h3>Привет из iframe!</h3>
-        </body>
-    </html>
+    <!DOCTYPE html>
+	<html lang="ru">
+	<head>
+	<meta charset="UTF-8">
+	<title>Мой iframe</title>
+	</head>
+	<body>
+	<h3>Фрейм загружен</h3>
+	<div id="info"></div>
+
+	<script>
+		// 1. Сообщаем YCLIENTS, что iframe готов
+		parent.postMessage({
+		type: "iframe_ready",
+		payload: { success: true }
+		}, "*");
+
+		// 2. Ждём данные от YCLIENTS
+		window.addEventListener("message", (event) => {
+		const msg = event.data;
+		if (msg.type === "yclients_response_entity") {
+			const entity = msg.payload.entity;
+			document.getElementById("info").innerText =
+			JSON.stringify(entity, null, 2);
+		}
+		});
+	</script>
+	</body>
+	</html>
+
     """, 200
 
 @app.after_request
