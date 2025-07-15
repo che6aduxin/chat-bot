@@ -1,22 +1,18 @@
-<!DOCTYPE html>
-<html>
+{% extends "base.html" %}
 
-<head>
-	<title>Вход</title>
-</head>
+{% block title %}Вход{% endblock %}
+{% block header %}Авторизация{% endblock %}
 
-<body>
-	<h2>Вход администратора</h2>
-	<form method="post">
-		<input name="username" placeholder="Логин"><br>
-		<input name="password" type="password" placeholder="Пароль"><br>
-		<button type="submit">Войти</button>
-	</form>
-	{% with messages = get_flashed_messages() %}
-	{% if messages %}
-	<p style="color:red;">{{ messages[0] }}</p>
-	{% endif %}
-	{% endwith %}
-</body>
-
-</html>
+{% block content %}
+<form method="post" class="card card-body shadow-sm">
+	<div class="mb-3">
+		<label class="form-label">Логин</label>
+		<input name="username" class="form-control" placeholder="Логин" required>
+	</div>
+	<div class="mb-3">
+		<label class="form-label">Пароль</label>
+		<input name="password" type="password" class="form-control" placeholder="Пароль" required>
+	</div>
+	<button type="submit" class="btn btn-primary w-100">Войти</button>
+</form>
+{% endblock %}
