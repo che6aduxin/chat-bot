@@ -29,17 +29,15 @@ def admin():
     if not session.get("logged_in"):
         return redirect(url_for("admin.login"))
 
-    file_path = "prompt.txt"
-
     if request.method == "POST":
         new_text = request.form.get("text")
-        with open(file_path, "w", encoding="utf-8") as prompt:
+        with open(PROMPT_PATH, "w", encoding="utf-8") as prompt:
             prompt.write(new_text) # type: ignore
         flash("Текст обновлён")
         logger.info("Промпт обновлён администратором")
 
-    if os.path.exists(file_path):
-        with open(file_path, "r", encoding="utf-8") as prompt:
+    if os.path.exists(PROMPT_PATH):
+        with open(PROMPT_PATH, "r", encoding="utf-8") as prompt:
             current_text = prompt.read()
     else:
         current_text = ""
