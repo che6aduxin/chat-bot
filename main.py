@@ -179,6 +179,23 @@ def webhook():
 		return "OK", 200
 
 
+@app.route("/iframe", methods=["GET"])
+def iframe_view():
+    return """
+    <html>
+        <head><title>YCLIENTS Iframe</title></head>
+        <body>
+            <h3>Привет из iframe!</h3>
+        </body>
+    </html>
+    """, 200
+
+@app.after_request
+def allow_iframe(response):
+    response.headers.pop("X-Frame-Options", None)
+    return response
+
+
 @app.route("/", methods=["GET"])
 def home():
 	return "Бот работает!", 200
