@@ -1,0 +1,47 @@
+from flask import Blueprint, request, render_template, redirect, url_for, session, flash
+from app.logger import setup_logger
+from app.database import memory
+from app.config import Config
+from pathlib import Path
+import os
+
+admin_bp = Blueprint("admin", __name__)
+logger = setup_logger("Admin panel")
+PROMPT_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "prompt.txt"
+
+@admin_bp.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+
+        if username == Config.ADMIN_USERNAME and password == Config.ADMIN_PASSWORD:
+            session["logged_in"] = True
+            logger.info("Успешный вход администратора")
+            return redirect(url_for("admin.admin"))
+        else:
+            logger.warning(f"Неудачная попытка входа: {username}")
+            flash("Неверные данные")
+    return render_template("login.html")
+
+@admin_bp.route("/admin", methods=["GET", "POST"])
+def admin():
+    if not session.get("logged_in"):
+        return redirect(url_for("admin.login"))
+
+    file_path = "prompt.txt"
+
+    if request.method == "POST":
+        new_text = request.form.get("text")
+        with open(file_path, "w", encoding="utf-8") as prompt:
+            prompt.write(new_text) # type: ignore
+        flash("Текст обновлён")
+        logger.info("Промпт обновлён администратором")
+
+    if os.path.exists(file_path):
+        with open(file_path, "r", encoding="utf-8") as prompt:
+            current_text = prompt.read()
+    else:
+        current_text = ""
+
+    return render_template("admin.html", text=current_text)

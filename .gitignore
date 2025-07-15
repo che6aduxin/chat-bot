@@ -1,9 +1,11 @@
+# Misc
+test.py
+**/test.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
 *$py.class
-test.py
-chatgpt.py
 
 # C extensions
 *.so

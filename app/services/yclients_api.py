@@ -1,6 +1,9 @@
 import json
 import requests
 from typing import Any
+from app.logger import setup_logger
+
+logger = setup_logger("YClients API")
 
 class YClientsAPI:
 	def __init__(self, bearer_token, company_id):
@@ -12,6 +15,16 @@ class YClientsAPI:
 			"Authorization": f"Bearer {self.API_TOKEN_BEARER}"
 		}
 		self.URL = "https://api.yclients.com/api/v1"
+
+	def call(self, func_name: str, args: dict = {}) -> Any:
+		# !!! ТОЛЬКО МЕТОДЫ ОБЪЕКТА YCLIENTSAPI !!!
+		method = getattr(self, func_name, None)
+		if method is None or not callable(method):
+			logger.error(f"Не найден метод {func_name}")
+			return f'Метод "{func_name}" не найден или не является функцией'
+
+		logger.info(f"Вызов метода {func_name} с аргументами {args}")
+		return method(**args)
 
 	def get_service_categories(self, staff_id: int = 0, datetime: str = "", service_ids: list = list()) -> list:
 		# Получить все категории услуг
@@ -81,5 +94,5 @@ class YClientsAPI:
 		}
 		response = requests.post(url, json=payload, headers=self.HEADERS)
 		return response.json()
-	
+
 	# TODO: добавить функцию для получения записей клиента
