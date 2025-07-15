@@ -202,8 +202,8 @@
 	{
 		"type": "function",
 		"function": {
-			"name": "get_knowlegde_base",
-			"description": "Получить частозадаваемые вопросы и ответы на них",
+			"name": "get_knowledge_base",
+			"description": "Возвращает список часто задаваемых вопросов (FAQ) и ответов, чтобы помочь пользователю получить справочную информацию",
 			"parameters": {
 				"type": "object",
 				"properties": {},

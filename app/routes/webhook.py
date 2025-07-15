@@ -36,7 +36,7 @@ def webhook():
 		history.append({"role": "user", "content": message})
 		choice = openai_service.generate_gpt_response(history, name, phone)
 		history.append(choice.message.model_dump())
-		logger.info(f"Ответ GPT: {choice}")
+		# logger.info(f"Ответ GPT: {choice}") дублируется в openai_service.py
 
 		while choice.finish_reason == "tool_calls":
 			for tool_call in choice.message.tool_calls: # type: ignore

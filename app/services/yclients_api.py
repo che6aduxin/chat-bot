@@ -28,7 +28,7 @@ class YClientsAPI:
 		logger.info(f"Вызов метода {func_name} с аргументами {args}")
 		return method(**args)
 
-	def get_knowlegde_base(self) -> str:
+	def get_knowledge_base(self) -> str:
 		with open(FAQ_PATH, "r", encoding="utf-8") as faq:
 			return faq.read()
 
