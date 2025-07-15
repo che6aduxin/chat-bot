@@ -2,8 +2,10 @@ import json
 import requests
 from typing import Any
 from app.logger import setup_logger
+from pathlib import Path
 
 logger = setup_logger("YClients API")
+FAQ_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "faq.txt"
 
 class YClientsAPI:
 	def __init__(self, bearer_token, company_id):
@@ -25,6 +27,10 @@ class YClientsAPI:
 
 		logger.info(f"Вызов метода {func_name} с аргументами {args}")
 		return method(**args)
+
+	def get_knowlegde_base(self) -> str:
+		with open(FAQ_PATH, "r", encoding="utf-8") as faq:
+			return faq.read()
 
 	def get_service_categories(self, staff_id: int = 0, datetime: str = "", service_ids: list = list()) -> list:
 		# Получить все категории услуг

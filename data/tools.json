@@ -198,5 +198,17 @@
 				]
 			}
 		}
+	},
+	{
+		"type": "function",
+		"function": {
+			"name": "get_knowlegde_base",
+			"description": "Получить частозадаваемые вопросы и ответы на них",
+			"parameters": {
+				"type": "object",
+				"properties": {},
+				"required": []
+			}
+		}
 	}
 ]
