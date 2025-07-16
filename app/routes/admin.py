@@ -46,7 +46,7 @@ def prompt():
 
 	return render_template("prompt.html", text=current_text)
 
-@admin_bp.route("/admin/users", methods=["GET"])
+@admin_bp.route("/admin/users", methods=["GET", "POST"])
 def users():
 	if not session.get("logged_in"):
 		return redirect(url_for("admin.login"))
