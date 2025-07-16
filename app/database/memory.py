@@ -20,6 +20,16 @@ pool = mysql.pooling.MySQLConnectionPool(
 
 logger = setup_logger("Memory")
 
+def get_all_users() -> list:
+	logger.info("Получение всех пользователей")
+	with pool.get_connection() as connection:
+		if not connection.is_connected():
+			connection.reconnect()
+		with connection.cursor() as cursor:
+			cursor.execute("SELECT phone FROM users")
+			phones = [row[0] for row in cursor.fetchall()]
+		return phones
+
 def get_memory(phone: str) -> list:
 	logger.info(f"Получена история от {phone}")
 	with pool.get_connection() as connection:

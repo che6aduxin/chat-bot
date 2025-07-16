@@ -4,6 +4,7 @@ from app.database import memory
 from app.config import Config
 from pathlib import Path
 import os
+from app.database.memory import get_all_users, get_memory
 
 admin_bp = Blueprint("admin", __name__)
 logger = setup_logger("Admin panel")
@@ -11,47 +12,48 @@ PROMPT_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "prompt.t
 
 @admin_bp.route("/login", methods=["GET", "POST"])
 def login():
-    if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
+	if request.method == "POST":
+		username = request.form.get("username")
+		password = request.form.get("password")
 
-        if username == Config.ADMIN_USERNAME and password == Config.ADMIN_PASSWORD:
-            session["logged_in"] = True
-            logger.info("Успешный вход администратора")
-            return redirect(url_for("admin.prompt"))
-        else:
-            logger.warning(f"Неудачная попытка входа: {username}")
-            flash("Неверные данные")
-    return render_template("login.html")
+		if username == Config.ADMIN_USERNAME and password == Config.ADMIN_PASSWORD:
+			session["logged_in"] = True
+			logger.info("Успешный вход администратора")
+			return redirect(url_for("admin.prompt"))
+		else:
+			logger.warning(f"Неудачная попытка входа: {username}")
+			flash("Неверные данные")
+	return render_template("login.html")
 
 @admin_bp.route("/admin/prompt", methods=["GET", "POST"])
 def prompt():
-    if not session.get("logged_in"):
-        return redirect(url_for("admin.login"))
+	if not session.get("logged_in"):
+		return redirect(url_for("admin.login"))
 
-    if request.method == "POST":
-        new_text = request.form.get("text")
-        with open(PROMPT_PATH, "w", encoding="utf-8") as prompt:
-            prompt.write(new_text) # type: ignore
-        flash("Текст обновлён")
-        logger.info("Промпт обновлён администратором")
-        return redirect(url_for("admin.prompt"))
+	if request.method == "POST":
+		new_text = request.form.get("text")
+		with open(PROMPT_PATH, "w", encoding="utf-8") as prompt:
+			prompt.write(new_text) # type: ignore
+		flash("Текст обновлён")
+		logger.info("Промпт обновлён администратором")
+		return redirect(url_for("admin.prompt"))
 
-    if os.path.exists(PROMPT_PATH):
-        with open(PROMPT_PATH, "r", encoding="utf-8") as prompt:
-            current_text = prompt.read()
-    else:
-        current_text = ""
+	if os.path.exists(PROMPT_PATH):
+		with open(PROMPT_PATH, "r", encoding="utf-8") as prompt:
+			current_text = prompt.read()
+	else:
+		current_text = ""
 
-    return render_template("prompt.html", text=current_text)
+	return render_template("prompt.html", text=current_text)
 
 @admin_bp.route("/admin/users", methods=["GET"])
 def users():
-    if not session.get("logged_in"):
-        return redirect(url_for("admin.login"))
+	if not session.get("logged_in"):
+		return redirect(url_for("admin.login"))
 
+	phones = get_all_users()
+	selected = request.args.get("phone")
+	messages = None
+	if selected: messages = get_memory(selected)
 
-    selected = request.args.get("phone")
-    messages = None
-
-    return render_template("users.html", phones=[1,2,3], messages=messages, selected=selected)
+	return render_template("users.html", phones=phones, messages=messages, selected=selected)
