@@ -21,7 +21,7 @@ def generate_gpt_response(history: list[dict], name: str, phone: str) -> Choice:
 	system_message = {"role": "developer", "content": get_system_prompt(name, phone)}
 	if not history or history[0] != system_message: history.insert(0, system_message)
 	response = client.chat.completions.create(
-		model="gpt-4o",
+		model="gpt-4o-mini",
 		messages=history, # type: ignore
 		tools=tools,
 		tool_choice="auto",
