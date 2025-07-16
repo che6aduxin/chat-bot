@@ -54,4 +54,4 @@ def users():
     selected = request.args.get("phone")
     messages = None
 
-    return render_template("admin/users.html", phones=[1,2,3], messages=messages, selected=selected)
+    return render_template("users.html", phones=[1,2,3], messages=messages, selected=selected)
