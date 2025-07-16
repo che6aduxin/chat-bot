@@ -35,7 +35,7 @@ def prompt():
             prompt.write(new_text) # type: ignore
         flash("Текст обновлён")
         logger.info("Промпт обновлён администратором")
-        return redirect(url_for("admin.admin"))
+        return redirect(url_for("admin.prompt"))
 
     if os.path.exists(PROMPT_PATH):
         with open(PROMPT_PATH, "r", encoding="utf-8") as prompt:
