@@ -4,7 +4,7 @@ from app.database import memory
 from app.config import Config
 from pathlib import Path
 import os
-from app.database.memory import get_all_users, get_memory
+from app.database import memory
 
 admin_bp = Blueprint("admin", __name__)
 logger = setup_logger("Admin panel")
@@ -51,9 +51,16 @@ def users():
 	if not session.get("logged_in"):
 		return redirect(url_for("admin.login"))
 
-	phones = get_all_users()
+	phones = memory.get_all_users()
 	selected = request.args.get("phone")
 	messages = None
-	if selected: messages = get_memory(selected)
+	if selected: messages = memory.get_memory(selected)
+
+	if request.method == "POST" and request.form.get("action") == "clear":
+		if selected:
+			memory.update_memory(selected, [])
+			flash(f"История пользователя {selected} очищена")
+
+		return redirect(url_for("admin.users", phone=selected))
 
 	return render_template("users.html", phones=phones, messages=messages, selected=selected)

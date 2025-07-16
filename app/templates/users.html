@@ -20,9 +20,14 @@
 <ul class="list-group">
 	{% for msg in messages %}
 	<li class="list-group-item">
-		<strong>{{ msg.role }}:</strong> {{ msg.content }}
+		<strong>{{ msg.role }}:</strong> {{ msg.content | replace('\n', '<br>') | safe}}
 	</li>
 	{% endfor %}
 </ul>
+
+<form method="post">
+	<input type="hidden" name="phone" value="{{ selected }}">
+	<button type="submit" name="action" value="clear" class="btn btn-danger">Очистить историю</button>
+</form>
 {% endif %}
 {% endblock %}
