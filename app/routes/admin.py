@@ -43,7 +43,7 @@ def prompt():
     else:
         current_text = ""
 
-    return render_template("admin.html", text=current_text)
+    return render_template("prompt.html", text=current_text)
 
 @admin_bp.route("/admin/users", methods=["GET"])
 def users():
