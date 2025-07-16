@@ -18,7 +18,7 @@ def login():
         if username == Config.ADMIN_USERNAME and password == Config.ADMIN_PASSWORD:
             session["logged_in"] = True
             logger.info("Успешный вход администратора")
-            return redirect(url_for("admin.admin"))
+            return redirect(url_for("admin.prompt"))
         else:
             logger.warning(f"Неудачная попытка входа: {username}")
             flash("Неверные данные")
