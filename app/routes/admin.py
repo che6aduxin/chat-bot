@@ -60,6 +60,7 @@ def users():
 		if selected:
 			memory.update_memory(selected, [])
 			flash(f"История пользователя {selected} очищена")
+			logger.info(f"История {selected} очищена")
 
 		return redirect(url_for("admin.users", phone=selected))
 

@@ -40,12 +40,11 @@ def webhook():
 
 		while choice.finish_reason == "tool_calls":
 			for tool_call in choice.message.tool_calls: # type: ignore
-				name = tool_call.function.name
+				func_name = tool_call.function.name
 				args = json.loads(tool_call.function.arguments)
-				logger.info(f"Function call: {name}")
-				logger.info(f"Arguments: {args}")
 
-				result = yclients_api.call(name, args)
+				result = yclients_api.call(func_name, args)
+				logger.info(f"Ответ YClients: {result}")
 				history.append({
 					"role": "tool",
 					"tool_call_id": tool_call.id,
