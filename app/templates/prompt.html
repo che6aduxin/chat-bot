@@ -1,13 +1,10 @@
 {% extends "base.html" %}
-
 {% block title %}Редактирование промпта{% endblock %}
-{% block header %}Редактирование system prompt{% endblock %}
-
 {% block content %}
+<h2>Редактирование system prompt</h2>
 <form method="post">
 	<div class="mb-3">
-		<label class="form-label">Промпт</label>
-		<textarea name="text" class="form-control" rows="16">{{ text }}</textarea>
+		<textarea name="text" class="form-control" rows="12">{{ text }}</textarea>
 	</div>
 	<button type="submit" class="btn btn-success">Сохранить</button>
 </form>

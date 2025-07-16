@@ -24,8 +24,8 @@ def login():
             flash("Неверные данные")
     return render_template("login.html")
 
-@admin_bp.route("/admin", methods=["GET", "POST"])
-def admin():
+@admin_bp.route("/admin/prompt", methods=["GET", "POST"])
+def prompt():
     if not session.get("logged_in"):
         return redirect(url_for("admin.login"))
 
@@ -35,6 +35,7 @@ def admin():
             prompt.write(new_text) # type: ignore
         flash("Текст обновлён")
         logger.info("Промпт обновлён администратором")
+        return redirect(url_for("admin.admin"))
 
     if os.path.exists(PROMPT_PATH):
         with open(PROMPT_PATH, "r", encoding="utf-8") as prompt:
@@ -43,3 +44,14 @@ def admin():
         current_text = ""
 
     return render_template("admin.html", text=current_text)
+
+@admin_bp.route("/admin/users", methods=["GET"])
+def users():
+    if not session.get("logged_in"):
+        return redirect(url_for("admin.login"))
+
+
+    selected = request.args.get("phone")
+    messages = None
+
+    return render_template("admin/users.html", phones=[1,2,3], messages=messages, selected=selected)

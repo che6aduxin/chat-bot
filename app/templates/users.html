@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Пользователи{% endblock %}
+{% block content %}
+<h2>История пользователей</h2>
+
+<form method="get">
+	<div class="mb-3">
+		<label>Выберите пользователя:</label>
+		<select name="phone" class="form-select" onchange="this.form.submit()">
+			<option disabled selected>-- выберите --</option>
+			{% for phone in phones %}
+			<option value="{{ phone }}" {% if selected==phone %}selected{% endif %}>{{ phone }}</option>
+			{% endfor %}
+		</select>
+	</div>
+</form>
+
+{% if messages %}
+<h5>История сообщений:</h5>
+<ul class="list-group">
+	{% for msg in messages %}
+	<li class="list-group-item">
+		<strong>{{ msg.role }}:</strong> {{ msg.content }}
+	</li>
+	{% endfor %}
+</ul>
+{% endif %}
+{% endblock %}
