@@ -3,7 +3,7 @@
 		"type": "function",
 		"function": {
 			"name": "get_service_categories",
-			"description": "Получить все доступные категории услуг. Отсюда можно узнавать их category_id",
+			"description": "Получить все доступные категории услуг. Отсюда можно узнавать их category_id. Возвращает tuple[tuple[id, title], ...]",
 			"parameters": {
 				"type": "object",
 				"properties": {
@@ -31,7 +31,7 @@
 		"type": "function",
 		"function": {
 			"name": "get_services_list",
-			"description": "Получить все доступные услуги. Отсюда можешь узнавать их service_id и получать информацию по услуге, указав service_ids",
+			"description": "Получить все доступные услуги. Отсюда можешь узнавать их service_id и получать информацию по услуге, указав service_ids. Возвращает tuple[dict[str, str | int], ...]",
 			"parameters": {
 				"type": "object",
 				"properties": {
@@ -59,7 +59,7 @@
 		"type": "function",
 		"function": {
 			"name": "get_staff_list",
-			"description": "Получить список всех доступных сотрудников",
+			"description": "Получить список всех доступных сотрудников. Возвращает tuple[dict[str, str | int], ...]",
 			"parameters": {
 				"type": "object",
 				"properties": {
@@ -83,7 +83,7 @@
 		"type": "function",
 		"function": {
 			"name": "get_available_dates",
-			"description": "Получить доступные даты по фильтрам",
+			"description": "Получить доступные даты по фильтрам. Возвращает tuple[\"month-day\", ...]",
 			"parameters": {
 				"type": "object",
 				"properties": {
@@ -119,7 +119,7 @@
 		"type": "function",
 		"function": {
 			"name": "get_available_times",
-			"description": "Получить доступные сеансы по фильтрам",
+			"description": "Получить доступные сеансы по фильтрам. Возвращает tuple[tuple[time, seance_length]]",
 			"parameters": {
 				"type": "object",
 				"properties": {

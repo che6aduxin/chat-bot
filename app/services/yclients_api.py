@@ -32,7 +32,7 @@ class YClientsAPI:
 		with open(FAQ_PATH, "r", encoding="utf-8") as faq:
 			return faq.read()
 
-	def get_service_categories(self, staff_id: int = 0, datetime: str = "", service_ids: list = list()) -> list:
+	def get_service_categories(self, staff_id: int = 0, datetime: str = "", service_ids: list[int] = list()) -> tuple[tuple[int, str], ...]:
 		# Получить все категории услуг
 		url = f"{self.URL}/book_services/{self.COMPANY_ID}"
 		params = {
@@ -40,10 +40,11 @@ class YClientsAPI:
 			"datetime": datetime
 		}
 		if service_ids: params["service_ids"] = service_ids
-		resp = requests.get(url, headers=self.HEADERS, params=params)
-		return resp.json()["data"]["category"]
+		data = requests.get(url, headers=self.HEADERS, params=params).json()
+		data = data.get("data", {}).get("category", [])
+		return tuple((element["id"], element["title"]) for element in data)
 
-	def get_services_list(self, staff_id: int = 0, datetime: str = "", service_ids: list[int] = list()) -> list:
+	def get_services_list(self, staff_id: int = 0, datetime: str = "", service_ids: list[int] = list()) -> tuple[dict[str, str | int], ...]:
 		# Получить список услуг
 		url = f"{self.URL}/book_services/{self.COMPANY_ID}"
 		params = {
@@ -51,20 +52,36 @@ class YClientsAPI:
 			"datetime": datetime
 		}
 		if service_ids: params["service_ids"] = service_ids
-		resp = requests.get(url, headers=self.HEADERS, params=params)
-		return resp.json()["data"]["services"]
+		data = requests.get(url, headers=self.HEADERS, params=params).json()
+		data = data.get("data", {}).get("services", [])
+		return tuple({
+			"id": element["id"],
+			"title": element["title"],
+			"category_id": element["category_id"],
+			"price_min": element["price_min"],
+			"price_max": element["price_max"],
+			"discount": element["discount"],
+			"comment": element["comment"],
+			"seance_length": element.get("seance_length")
+		} for element in data if element["active"])
 
-	def get_staff_list(self, service_ids: list[int] = list(), datetime: str = "") -> list:
+	def get_staff_list(self, service_ids: list[int] = list(), datetime: str = "") -> tuple[dict[str, str | int], ...]:
 		# Получить список сотрудников
 		url = f"{self.URL}/book_staff/{self.COMPANY_ID}"
 		params = {
 			"datetime": datetime
 		}
 		if service_ids: params["service_ids"] = service_ids # type: ignore
-		resp = requests.get(url, headers=self.HEADERS, params=params)
-		return resp.json()["data"]
+		data = requests.get(url, headers=self.HEADERS, params=params).json()
+		data = data.get("data", [])
+		return tuple({
+			"id": element["id"],
+			"name": element["name"],
+			"specialization": element["specialization"],
+			"seance_date": element["seance_date"]
+		} for element in data if element["bookable"])
 
-	def get_available_dates(self, staff_id: int = 0, service_ids: list[int] = list(), date: str = "", date_from: str = "", date_to: str = ""):
+	def get_available_dates(self, staff_id: int = 0, service_ids: list[int] = list(), date: str = "", date_from: str = "", date_to: str = "") -> tuple[str, ...]:
 		url = f"{self.URL}/book_dates/{self.COMPANY_ID}"
 		params = {
 			"staff_id": staff_id,
@@ -73,15 +90,18 @@ class YClientsAPI:
 			"date_to": date_to
 		}
 		if service_ids: params["service_ids"] = service_ids
-		resp = requests.get(url, headers=self.HEADERS, params=params)
-		return resp.json()["data"]
+		data = requests.get(url, headers=self.HEADERS, params=params).json()
+		data = data.get("data", {}).get("booking_days", {})
+		return tuple(f"{month}-{day}" for month, days in data.items() for day in days)
 
-	def get_available_times(self, date: str, staff_id: int = 0, service_ids: list[int] = list()):
+
+	def get_available_times(self, date: str, staff_id: int = 0, service_ids: list[int] = list()) -> tuple[tuple[str, int], ...]:
 		url = f"{self.URL}/book_times/{self.COMPANY_ID}/{staff_id}/{date}"
 		params = {}
 		if service_ids: params["service_ids"] = service_ids
-		resp = requests.get(url, headers=self.HEADERS, params=params)
-		return resp.json()["data"]
+		data = requests.get(url, headers=self.HEADERS, params=params).json()
+		data = data.get("data", [])
+		return tuple((element["time"], element["seance_length"]) for element in data)
 
 	def book(self, booking_id: int, fullname: str, phone: str, staff_id: int, date_time: str, email: str = "noemail@noemail.com", service_id: int = 0, comment: str = "") -> dict:
 		url = f"https://yclients.com/api/v1/book_record/{self.COMPANY_ID}/"
@@ -98,7 +118,7 @@ class YClientsAPI:
 				"datetime": date_time
 			}]
 		}
-		response = requests.post(url, json=payload, headers=self.HEADERS)
-		return response.json()
+		response = requests.post(url, json=payload, headers=self.HEADERS).json()
+		return response["data"]
 
 	# TODO: добавить функцию для получения записей клиента
