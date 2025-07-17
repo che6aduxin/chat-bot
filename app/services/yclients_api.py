@@ -78,7 +78,6 @@ class YClientsAPI:
 			"id": element["id"],
 			"name": element["name"],
 			"specialization": element["specialization"],
-			"seance_date": element["seance_date"]
 		} for element in data if element["bookable"])
 
 	def get_available_dates(self, staff_id: int = 0, service_ids: list[int] = list(), date: str = "", date_from: str = "", date_to: str = "") -> tuple[str, ...]:
