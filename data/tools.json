@@ -72,10 +72,12 @@
 						"items": {
 							"type": "integer"
 						},
-						"description": "Фильтр по id услуг"
+						"description": "Идентификаторы услуг, по которым нужно отфильтровать сотрудников"
 					}
 				},
-				"required": []
+				"required": [
+					"service_ids"
+				]
 			}
 		}
 	},
